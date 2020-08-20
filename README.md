@@ -33,7 +33,7 @@ ReactDOM.render(<Person />, document.querySelector("#p1"));
 ```
 - **ReactDOM.render(...)** This methods allows us to render a JS function as a component to the real DOM.
 - It is not a exact HTML. 'class' becomes 'className' in JSX.
-- The first parameter is the selector for the component Person, the second parameter tells that where to render it is.
+- The first parameter is the selector for the component Person, the second parameter tells that where to render it.
 
 ```html
 <div id="p1"></div>
@@ -201,6 +201,7 @@ const newObject = {...oldObject, newProp: 5};
 ```
 - If we want to add all the elements from the *oldArray* to *newArray* and additionaly add one or more elements.
 - If we create a *newObject* with new properties, '...' is to pull out all the properties of the old object and their values and add them as key-value pairs to the new object.
+
 **Note**: If *oldObject* has a property *newProp*, it would be overridden by a *newProp: 5*. It takes precedence.
 
 **Rest**: Used to merge a list of function arguments into an array.
@@ -255,6 +256,289 @@ console.log(person); //Not React
 
 ### 2.8 - Array Functions
 - *filter()*
-- *map()*
+- *map()* 
 - *sort()*
 
+## 3 - Base Features & Syntax
+
+### 3.1 - Component Basics
+It can be written. But it is not an react component.
+```typescript jsx
+ReactDOM.render(<h1> Test </h1>, document.getElementById('root'));
+```
+ But in react component:
+```typescript jsx
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+```
+- App is the root component.
+---
+```typescript jsx
+import React from 'react';
+import './App.css';
+
+function App() {
+  return (
+    <div className="App">
+      <h1> Hi I'm a react app </h1>
+    </div>
+  );
+}
+export default App;
+```
+- Creating a class with *class* keyword and extends from *Component* from **React** library.  
+- This is the one way of the creating components.
+- *render()* method is needed to render something to the screen.
+- Every react component has to return or render some HTML code which can be rendered to the DOM to the screen.
+- Export as default the component to use another files. 
+- Actually it is **not** HTML code. It is just a syntactical sugar. It is JSX.
+
+### 3.2 - Understanding JSX
+```typescript jsx
+import React from 'react';
+import './App.css';
+
+function App() {
+  return React.createElement('div', null, 'h1', 'I\'m a React App!!!');
+}
+export default App;
+```
+- *createElement()* is a method that takes at least three arguments.
+- The first one the element we want to render to the DOM. This could be a *div*. It can be our own component that is available.
+- The second argument is configuration for it. It is JS object and optional.
+- The third one is the children that implies what is nested inside of it.
+Here, *h1* (the third argument) is interpreted as text
+For this:
+```typescript jsx
+import React from 'react';
+import './App.css';
+
+function App() {
+  return React.createElement('div', null, React.createElement('h1', null, 'I\'m a React App!!!'));
+}
+export default App;
+```
+There is not any css styling. Because we didn't add any configuration.
+For this: (I)
+```typescript jsx
+import React from 'react';
+import './App.css';
+
+function App() {
+  return React.createElement('div', {className: 'App'}, React.createElement('h1', null, 'I\'m a React App!!!'));
+}
+export default App;
+```
+As a result the code above is equal to: (II)
+```typescript jsx
+import React from 'react';
+import './App.css';
+
+function App() {
+  return (
+    <div className="App">
+      <h1> Hi I'm a react app </h1>
+    </div>
+  );
+}
+export default App;
+```
+So, at the end of the day, JSX is compiled to (I).
+
+### 3.3 - JSX Restrictions
+- JS keywords can not be used in JSX. (*className* for *class*)
+- JSX has to have one root element. We can't do:
+```typescript jsx
+import React from 'react';
+import './App.css';
+
+function App() {
+  return (
+    <div className="App">
+      <h1> Hi I'm a react app </h1>
+    </div>
+    // This h1 gives error.
+    <h1> Another heading here </h1>
+  );
+}
+export default App;
+```
+It is kind of loosened. The best practice, wrap everything into one root element per component.
+
+### 3.4 - Creating a Functional Component 
+When creating a component, the directory starts with capital letter as a convention.
+- The function name starts with lowercase character.
+
+When creating components, you have the choice between two different
+ways:
+- Functional components (also referred to as "presentational", "dumb" or
+"stateless" components - more about this later in the course):
+```typescript jsx
+import React from "react";
+const person = () => {
+    return <p>I'm a Person!</p>
+};
+
+export default person;
+
+```
+-  class-based components (also referred to as "containers", "smart" or "stateful"
+components):
+```typescript jsx
+import {Component} from 'react';
+
+class Cmp extends Component { 
+    render () {
+        return <div>some JSX</div> 
+    } 
+}
+```
+The important thing here is to use these components in dynamic way.
+
+### 3.5 - Working with Props 
+- Import *Person*. 
+- Pass *name* and *age* parameter to Person.
+ ```typescript jsx
+import React from 'react';
+import './App.css';
+import Person from './Person/Person';
+
+function App() {
+  return (
+    <div className="App">
+      <h1> Hi I'm a react app </h1>
+        <Person name="React" age="5" />
+        <Person name="Angular" age="6" >My Hobbies: Playing</Person>
+        <Person name="Vue" age="4"/>
+    </div>
+  );
+}
+
+export default App;
+ ```
+- Take ***props*** as a parameter.
+ ```typescript jsx
+import React from "react";
+
+const person = (props) => {
+    return <p>I'm {props.name} and I'm {props.age} years old.</p>
+};
+export default person;
+ ```
+But what happened if we add something between our component tags like:
+ ```typescript jsx
+<Person name="Angular" age="6" >My Hobbies: Playing</Person>
+ ``` 
+
+### 3.6 - Understanding the Children Property 
+ ```typescript jsx
+import React from "react";
+
+const person = (props) => {
+    return (
+        <p>I'm {props.name} and I'm {props.age} years old.</p>
+        <p>I'm {props.name} and I'm {props.age} years old.</p>
+    );
+};
+export default person;
+ ```
+As a remainder; there should be only a single root in a component.
+So: 
+ ```typescript jsx
+import React from "react";
+
+const person = (props) => {
+    return (
+        <div>
+            <p>I'm {props.name} and I'm {props.age} years old.</p>
+            <p>{props.children}</p>
+        </div>
+    );
+};
+
+export default person;
+ ```
+There is a reserved property: ***props.children*** that provides us to reach the field that enclosed by the component's tag.
+
+### 3.7 - Understanding & Using State
+Sometimes we need an information that does not come from outside, inside and we need to change it again inside of the component.
+Therefore we need a class, because a class has properties.
+We have a way that is only works in a class that extends ***Component***.
+In a function component, it does not work.
+- ***state*** is reserved.
+ ```typescript jsx
+import React, {Component} from 'react';
+import './App.css';
+import Person from './Person/Person';
+
+class App extends Component {
+  state = {
+    persons: [
+        {"name": "React", "age": 5},
+        {"name": "Angular", "age": 6},
+        {"name": "Vue", "age": 4}
+    ]
+  };
+    render() {
+        return (<div className="App">
+               <h1> Hi I'm a react app </h1>
+               <button>Switch Name</button>
+               <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+               <Person name={this.state.persons[1].name} age={this.state.persons[1].age}>My Hobbies: Playing</Person>
+               <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+           </div>)
+    }
+}
+
+export default App;
+ ```
+- Changing ***state***, it will lead react to re-render our DOM or update the DOM. For example changing name, the component, the DOM will re-render. 
+
+### 3.8 - Handling Events with Methods
+- Click event is normally written as *onclick()* in JS. But it is written as *onClick()* in JSX.  
+- We have a method named *switchNameHandler*. That means we have a method and we don't call it actively. ***..Handler*** part here is to indicate that this is the method we aren't actively calling it, but we assigned it as eventHandler.    
+- Don't call it when we add the handler to the button or any other place. We only need to pass a reference.  
+ ```typescript jsx
+switchNameHandler = () => {
+      console.log('Was clicked');
+    };
+
+    render() {
+        return (<div className="App">
+            <h1> Hi I'm a react app </h1>
+            <button onClick={this.switchNameHandler}>Switch Name</button>
+            <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+            <Person name={this.state.persons[1].name} age={this.state.persons[1].age}>My Hobbies: Playing</Person>
+            <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+        </div>)
+    }
+ ```
+### 3.9 - Manipulating the State
+- ***this.setState()*** is a ***Component*** provided function that ensures that ***state*** is changed and the changes are reflected to DOM. 
+- It takes an object and then merge it with our existing state.
+- It does not change the property that doesn't overwritten in state.
+- For example ***otherState*** remains untouched.
+- Don't change state directly like:
+ ```typescript jsx
+switchNameHandler = () => {
+    this.state.persons[0].name = "React-DOM";
+};
+ ```
+It changes state as a first place, then what else ?
+
+Answer: ***props***. If *state* or *props* changes, it analyzes the code it already rendered to the DOM. After then it re-render the place that needs to be updated to reflect new state or props. 
+ ```typescript jsx
+    switchNameHandler = () => {
+      this.setState({
+        persons: [
+          {"name": "React-DOM", "age": 5.5555},
+          {"name": "Angular", "age": 6.77},
+          {"name": "Vue", "age": 4.66}
+        ]
+      });
+    };
+ ```
