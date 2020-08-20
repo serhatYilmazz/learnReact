@@ -262,7 +262,7 @@ console.log(person); //Not React
 ## 3 - Base Features & Syntax
 
 ### 3.1 - Component Basics
-It can be written. But it is not an react component.
+It can be written. But it is not a react component.
 ```typescript jsx
 ReactDOM.render(<h1> Test </h1>, document.getElementById('root'));
 ```
@@ -376,7 +376,7 @@ When creating a component, the directory starts with capital letter as a convent
 When creating components, you have the choice between two different
 ways:
 - Functional components (also referred to as "presentational", "dumb" or
-"stateless" components - more about this later in the course):
+"stateless" components):
 ```typescript jsx
 import React from "react";
 const person = () => {
@@ -481,7 +481,8 @@ class App extends Component {
         {"name": "React", "age": 5},
         {"name": "Angular", "age": 6},
         {"name": "Vue", "age": 4}
-    ]
+    ],
+    otherState: 'some other value'
   };
     render() {
         return (<div className="App">
@@ -496,7 +497,7 @@ class App extends Component {
 
 export default App;
  ```
-- Changing ***state***, it will lead react to re-render our DOM or update the DOM. For example changing name, the component, the DOM will re-render. 
+- Changing ***state***, it will lead react to re-render our DOM or update the DOM. For example changing name, the component, the DOM will be re-rendered. 
 
 ### 3.8 - Handling Events with Methods
 - Click event is normally written as *onclick()* in JS. But it is written as *onClick()* in JSX.  
@@ -522,15 +523,12 @@ switchNameHandler = () => {
 - It takes an object and then merge it with our existing state.
 - It does not change the property that doesn't overwritten in state.
 - For example ***otherState*** remains untouched.
-- Don't change state directly like:
+- Don't change state directly like: It already does not change the DOM. 
  ```typescript jsx
 switchNameHandler = () => {
     this.state.persons[0].name = "React-DOM";
 };
  ```
-It changes state as a first place, then what else ?
-
-Answer: ***props***. If *state* or *props* changes, it analyzes the code it already rendered to the DOM. After then it re-render the place that needs to be updated to reflect new state or props. 
  ```typescript jsx
     switchNameHandler = () => {
       this.setState({
@@ -542,3 +540,6 @@ Answer: ***props***. If *state* or *props* changes, it analyzes the code it alre
       });
     };
  ```
+It changes state as a first place, then what else ?
+
+Answer: ***props***. If *state* or *props* changes, it analyzes the code it already rendered to the DOM. After then it re-render the place that needs to be updated to reflect new state or props. 
