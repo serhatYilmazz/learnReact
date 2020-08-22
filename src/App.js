@@ -5,31 +5,55 @@ import Person from './Person/Person';
 class App extends Component {
     state = {
         persons: [
-            {"name": "React", "age": 5},
-            {"name": "Angular", "age": 6},
-            {"name": "Vue", "age": 4}
+            {"id": "asd123", "name": "React", "age": 5},
+            {"id": "bcd3214", "name": "Angular", "age": 6},
+            {"id": "fghrwt31", "name": "Vue", "age": 4}
         ],
-      otherState: 'some other value'
+        otherState: 'some other value',
+        showPersons: false
     };
 
     switchNameHandler = (newName) => {
-      this.setState({
-        persons: [
-          {"name": newName, "age": 5.5555},
-          {"name": "Angular", "age": 6.77},
-          {"name": "Vue", "age": 4.66}
-        ]
-      });
-    };
-
-    nameChangedEventHandler = (event) => {
         this.setState({
             persons: [
-                {"name": 'React-DOM', "age": 5.5555},
-                {"name": event.target.value, "age": 6.77},
+                {"name": newName, "age": 5.5555},
+                {"name": "Angularrr", "age": 6.77},
                 {"name": "Vue", "age": 4.66}
             ]
         });
+    };
+
+    nameChangedEventHandler = (event, id) => {
+        let personIndex = this.state.persons.findIndex(p => {
+            return p.id === id
+        });
+        const person = {
+            ...this.state.persons[personIndex]
+        };
+
+        person.name = event.target.value;
+
+        const persons = [...this.state.persons];
+        persons[personIndex] = person;
+
+        this.setState({
+            persons: persons
+        });
+    };
+
+    togglePersons = () => {
+        const current = this.state.showPersons;
+        this.setState({
+            showPersons: !current
+        })
+    };
+
+    deletePersonHandler = (index) => {
+        const persons = this.state.persons;
+        persons.splice(index, 1);
+        this.setState({
+            persons: persons
+        })
     };
 
     render() {
@@ -40,16 +64,31 @@ class App extends Component {
             padding: '8px'
         };
 
-        return (<div className="App">
-            <h1> Hi I'm a react app </h1>
-            <button style={style} onClick={() => this.switchNameHandler('React-vers32')}>Switch Name</button>
-            <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
-            <Person name={this.state.persons[1].name}
-                    myEvent={this.switchNameHandler.bind(this, 'React-vers2')}
-                    age={this.state.persons[1].age}
-                    changed={this.nameChangedEventHandler}>My Hobbies: Playing</Person>
-            <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
-        </div>)
+        let persons = null;
+        if (this.state.showPersons) {
+            persons = (
+                <div>
+                    {
+                        this.state.persons.map((person, index) => {
+                            return <Person key={person.id}
+                                           myEvent={this.deletePersonHandler.bind(this, index)}
+                                           name={person.name}
+                                           age={person.age}
+                                           changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                            />
+                        })
+                    }
+                </div>
+            );
+        }
+
+        return (
+            <div className="App">
+                <h1> Hi I'm a react app </h1>
+                <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+                {persons}
+            </div>
+        );
     }
 }
 

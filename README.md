@@ -722,3 +722,304 @@ render() {
 ```
 - Hovering is difficult when we are using inline styles.
 - We can use global *App.css* file.
+
+## 4 - Working with Lists and Conditionals
+
+### 4.1 - Rendering Content Conditionally
+
+- With arrow function definition, ***this*** keyword inside the method always and under all circumstances returns to the class.
+```typescript jsx
+state = {
+        persons: [
+            {"name": "React", "age": 5},
+            {"name": "Angular", "age": 6},
+            {"name": "Vue", "age": 4}
+        ],
+        otherState: 'some other value',
+        showPersons: false
+    };
+```
+- We added *showPersons* to ***state***.
+- In *render()*:
+```typescript jsx
+return (
+            <div className="App">
+                <h1> Hi I'm a react app </h1>
+                <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+                {this.state.showPersons ? 
+                    <div>
+                    <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+                    <Person name={this.state.persons[1].name}
+                            myEvent={this.switchNameHandler.bind(this, 'React-vers2')}
+                            age={this.state.persons[1].age}
+                            changed={this.nameChangedEventHandler}>My Hobbies: Playing</Person>
+                    <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+                </div> : null
+                }
+            </div>
+        );
+```
+We added curly braces to a new *div* that encapsulates ***Person***s. So we can use normal JS expressions since we have curly braces. We can use ternary operator for it.
+
+### 4.2 - Handling Dynamic Content the JavaScript Way
+When react decides re-render to DOM, it executes everything inside ***render()*** method. So we can use it.
+```typescript jsx
+render() {
+        let persons = null;
+        if (this.state.showPersons) {
+            persons = (
+                <div>
+                    <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+                    <Person name={this.state.persons[1].name}
+                            myEvent={this.switchNameHandler.bind(this, 'React-vers2')}
+                            age={this.state.persons[1].age}
+                            changed={this.nameChangedEventHandler}>My Hobbies: Playing</Person>
+                    <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+                </div>
+            );
+        }
+
+        return (
+            <div className="App">
+                <h1> Hi I'm a react app </h1>
+                <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+                {persons}
+            </div>
+        );
+    }
+```
+### 4.3 - Outputting Lists
+There is special function for loop through a list to render. We just use VanillaJS functions. 
+```typescript jsx
+let persons = null;
+        if (this.state.showPersons) {
+            persons = (
+                <div>
+                    {
+                        this.state.persons.map(person => {
+                            return <Person name={person.name} age={person.age}/>
+                        })
+                    }
+                </div>
+            );
+        }
+```
+We want to remove a Person:
+
+*App.js*
+```typescript jsx
+    deletePersonHandler = (index) => {
+        const persons = this.state.persons;
+        persons.splice(index, 1);
+        this.setState({
+            persons: persons
+        });
+    };
+```
+- Index is automatically provided by *map()*.
+```typescript jsx
+    let persons = null;
+        if (this.state.showPersons) {
+            persons = (
+                <div>
+                    {
+                        this.state.persons.map((person, index) => {
+                            return <Person myEvent={this.deletePersonHandler.bind(this, index)} name={person.name}  age={person.age}/>
+                        })
+                    }
+                </div>
+            );
+        }
+```
+*Person.js*
+```typescript jsx
+const person = (props) => {
+    return (
+        <div className="Person">
+            <p>I'm {props.name} and I'm {props.age} years old.</p>
+            <button type="button" onClick={props.myEvent}>Delete</button>
+        </div>
+    );
+};
+```
+But this approach has flow...
+
+We get state reference directly. We should get a copy of it to prevent unintended results. So:
+```typescript jsx
+    deletePersonHandler = (index) => {
+        //(1) const persons = this.state.persons.slice(); // Take copy of the array
+        const persons = [...this.state.persons]; //(2) Take copy of the array with spread operator.
+        persons.splice(index, 1);
+        this.setState({
+            persons: persons
+        });
+    };
+```
+With immutable fashion:
+- Create a copy
+- Change that
+- Update the state with it.
+
+### 4.4 - Lists & Keys
+Key property is default property react expects to find on an element no matter if it is a custom component or a default HTML element which we render through a list.
+- Key property helps React update the list efficiently.
+- React doesn't render whole DOM, it needs to know which elements of virtual DOM are changed. To prevent React to render all list, ***key*** property allows React to keep track of individual elements to find out which elements changed and which did not.
+We add *id* field that are unique on each *Person*. 
+```typescript jsx
+state = {
+    persons: [
+        {"id": "asd123", "name": "React", "age": 5},
+        {"id": "bcd3214", "name": "Angular", "age": 6},
+        {"id": "fghrwt31", "name": "Vue", "age": 4}
+    ],
+    otherState: 'some other value',
+    showPersons: false
+};
+```
+*key* property:
+```typescript jsx
+let persons = null;
+        if (this.state.showPersons) {
+            persons = (
+                <div>
+                    {
+                        this.state.persons.map((person, index) => {
+                            return <Person key={person.id} myEvent={this.deletePersonHandler.bind(this, index)} name={person.name}  age={person.age}/>
+                        })
+                    }
+                </div>
+            );
+        }
+```
+### 4.5 - Flexible Lists
+Side Note 
+---
+If an event occurs in background, like *event* is passed to function automatically, after then we want to use event an the parameter we enter together, we should do:
+ ```typescript jsx
+persons = (
+    <div>
+        {
+            this.state.persons.map((person, index) => {
+                return <Person key={person.id}
+                               myEvent={this.deletePersonHandler.bind(this, index)}
+                               name={person.name}
+                               age={person.age}
+                               // changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                               changed={this.nameChangedEventHandler('ser', 'os')}
+                />
+            })
+        }
+    </div>
+);
+ ```
+- *changed={this.nameChangedEventHandler('ser', 'os')* is a binding. But in function:
+```typescript jsx
+nameChangedEventHandler = (name, name2) => event => {
+    this.setState({
+        persons: [
+            {"name": event.target.value, "age": 5.5555},
+            {"name": name, "age": 6.77},
+            {"name": name2, "age": 4.66}
+        ]
+    });
+};
+```
+- We should curry it. Because inner function returns a function implicitly. It can be also written as:
+```typescript jsx
+nameChangedEventHandler = (name, name2) => {
+    return (eventt) => {
+        this.setState({
+            persons: [
+                {"name": eventt.target.value, "age": 5.5555},
+                {"name": name, "age": 6.77},
+                {"name": name2, "age": 4.66}
+            ]
+        });
+    }
+};
+```
+We should use arrow function to *this* keyword implies always *App.js*. So we ***can't*** write it like
+```typescript jsx
+ nameChangedEventHandler(name, name2) {
+        return function (eventt) {
+            this.setState({
+                persons: [
+                    {"name": eventt.target.value, "age": 5.5555},
+                    {"name": name, "age": 6.77},
+                    {"name": name2, "age": 4.66}
+                ]
+            });
+        }
+    };
+```
+---
+Now we define *onChange* event on our *Person* components respectively.
+```typescript jsx
+persons = (
+    <div>
+        {
+            this.state.persons.map((person, index) => {
+                return <Person key={person.id}
+                               myEvent={this.deletePersonHandler.bind(this, index)}
+                               name={person.name}
+                               age={person.age}
+                               changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                />
+            })
+        }
+    </div>
+);
+```
+- First we pass *changed* property to *Person* component and we define it with arrow function.
+- We pass *event* (default from JS) and *person.id*.
+
+Now we can change *nameChangedEventHandler* to:
+```typescript jsx
+nameChangedEventHandler = (event, id) => {
+    let personIndex = this.state.persons.findIndex(p => {
+        return p.id === id
+    });
+    const person = {
+        ...this.state.persons[personIndex]
+    };
+
+    person.name = event.target.value;
+
+    const persons = [...this.state.persons];
+    persons[personIndex] = person;
+
+    this.setState({
+        persons: persons
+    });
+};
+```
+Let's dive into it:
+
+```typescript jsx
+let personIndex = this.state.persons.findIndex(p => {
+    return p.id === id
+});
+```
+- Find index of the person from state.
+```typescript jsx
+const person = {
+       ...this.state.persons[personIndex]
+   };
+```
+- Obtaining person from state with an immutable way.
+```typescript jsx
+person.name = event.target.value;
+```
+- Getting new name from input field and change on immutable person's name.
+```typescript jsx
+const persons = [...this.state.persons];
+persons[personIndex] = person;
+```
+- Getting the person whose name will change is got immutable way.
+- Changing immutable Person list with changed Person object.
+```typescript jsx
+this.setState({
+            persons: persons
+        });
+``` 
+- It is reflected to state.
