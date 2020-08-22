@@ -523,7 +523,7 @@ switchNameHandler = () => {
 - It takes an object and then merge it with our existing state.
 - It does not change the property that doesn't overwritten in state.
 - For example ***otherState*** remains untouched.
-- Don't change state directly like: It already does not change the DOM. 
+- Don't change state directly like: It does not change the DOM anyway. 
  ```typescript jsx
 switchNameHandler = () => {
     this.state.persons[0].name = "React-DOM";
@@ -543,3 +543,182 @@ switchNameHandler = () => {
 It changes state as a first place, then what else ?
 
 Answer: ***props***. If *state* or *props* changes, it analyzes the code it already rendered to the DOM. After then it re-render the place that needs to be updated to reflect new state or props. 
+
+### 3.10 - Functional (Stateless) vs class (Stateful) Components
+- In a functional component, we can't change state.
+- Best practice is the usage of function form of components as often as possible.
+- Because the simple component which are just functions receiving props are very clear about what they do. And they ***don't manipulate*** application state.
+- The application state should only be changed and handled in a few selected components, referred as containers.
+- *App.js* is an example of a container.
+
+### 3.11 - Passing Method References Between Components
+- We can pass methods also as props so that we can call a method which might change to state in another component which does not have direct access to the state and which shouldn't have direct access to the state.
+(You can pass down click handlers which allow you to change data in the parent component in the *App* component.)
+
+*App.js*:   
+ ```typescript jsx
+<Person name={this.state.persons[1].name} myEvent={this.switchNameHandler} age={this.state.persons[1].age}>My Hobbies: Playing</Person>
+ ```
+*Person.js*:   
+ ```typescript jsx
+const person = (props) => {
+    return (
+        <div>
+            <p>I'm {props.name} and I'm {props.age} years old.</p>
+            <p onClick={props.myEvent}>{props.children}</p>
+        </div>
+    );
+};
+ ```
+So now, when we click the *My Hobbies: Playing*, the state in *App.js* changes.
+
+
+What if we want to pass a value to our function.
+ ```typescript jsx
+    switchNameHandler = (newName) => {
+      this.setState({
+        persons: [
+          {"name": newName, "age": 5.5555},
+          {"name": "Angular", "age": 6.77},
+          {"name": "Vue", "age": 4.66}
+        ]
+      });
+    };
+ ```
+How to pass the newName. There are two ways.
+- The first way:
+```typescript jsx
+render() {
+        return (<div className="App">
+            <h1> Hi I'm a react app </h1>
+            <button onClick={this.switchNameHandler.bind(this, 'React-vers1')}>Switch Name</button>
+            <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+            <Person name={this.state.persons[1].name} myEvent={this.switchNameHandler.bind(this, 'React-vers2')} age={this.state.persons[1].age}>My Hobbies: Playing</Person>
+            <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+        </div>)
+    }
+```
+- ***this*** here, tells that when we called this on the method, it should refer ***App.js*** instance properties. Because the place where we pass ***this*** implies ***App.js***.
+- When we click the button, the name of the first element will be *React-vers1*, but when we click the paragraph *My Hobbies: Playing*, the name will be *React-vers2*. 
+---
+- The second way:
+```typescript jsx
+render() {
+        return (<div className="App">
+            <h1> Hi I'm a react app </h1>
+            <button onClick={() => this.switchNameHandler('Say my name')}>Switch Name</button>
+            <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+            <Person name={this.state.persons[1].name} myEvent={this.switchNameHandler.bind(this, 'React-vers2')} age={this.state.persons[1].age}>My Hobbies: Playing</Person>
+            <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+        </div>)
+    }
+```
+- Since it is deferred execution, *this.switchNameHandler('Say my name')* does not execute immediately. It can take a parameter and return a function call which is *this.switchNameHandler('Say my name')* in this case.
+- But this way can be inefficient. The first way is the best practice.
+
+### 3.12 - Adding Two Way Binding
+What if we want to change the name our own.
+We define a new handler for name changing.
+
+*App.js*:
+```typescript jsx
+  nameChangedEventHandler = (event) => {
+        this.setState({
+            persons: [
+                {"name": 'React-DOM', "age": 5.5555},
+                {"name": event.target.value, "age": 6.77},
+                {"name": "Vue", "age": 4.66}
+            ]
+        });
+    };
+
+ render() {
+        return (<div className="App">
+            <h1> Hi I'm a react app </h1>
+            <button onClick={() => this.switchNameHandler('React-vers32')}>Switch Name</button>
+            <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+            <Person name={this.state.persons[1].name}
+                    myEvent={this.switchNameHandler.bind(this, 'React-vers2')}
+                    age={this.state.persons[1].age}
+                    changed={this.nameChangedEventHandler}>My Hobbies: Playing</Person>
+            <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+        </div>)
+    }
+```
+- The event object will actually be passed to method automatically by React like a normal JS. We have default get access to the ***event*** object.
+- We pass this handler to second *Person* component.
+
+*Person.js*: 
+```typescript jsx
+import React from "react";
+
+const person = (props) => {
+    return (
+        <div>
+            <p>I'm {props.name} and I'm {props.age} years old.</p>
+            <p onClick={props.myEvent}>{props.children}</p>
+            <input type='text' onChange={props.changed}/>
+        </div>
+    );
+};
+
+export default person;
+```
+- ***changed*** property is a contract with *Person* and *App*.
+- When *onChange()* event is triggered, *nameChangedEventHandler* will called.
+
+What if we want to bind two-way:
+```typescript jsx
+<input type='text' onChange={props.changed} value={props.name}/>
+```
+- We need to tell that ***value*** of the ***input*** should know ***props.name***.
+- If we remove ***onChange={props.changed}***, we can't change the input field since we don't handle the changing event of it.
+
+It is for two-way binding setup.
+
+### 3.13 - Adding Styling with Stylesheets
+
+We create Person/Person.css. After then we should import it the place where we want to use it.
+```typescript jsx
+import React from "react";
+import './Person.css';
+
+const person = (props) => {
+    return (
+        <div className="Person">
+            <p>I'm {props.name} and I'm {props.age} years old.</p>
+            <p onClick={props.myEvent}>{props.children}</p>
+            <input type='text' onChange={props.changed} value={props.name}/>
+        </div>
+    );
+};
+export default person;
+```
+- Thanks to *webpack*, we can use our *.css* files without merging it any other so we can obtain single and modular styling.
+
+- The second way: 
+
+*App.js*:
+```typescript jsx
+render() {
+        const style = {
+            backgroundColor: 'white',
+            font: 'inherit',
+            border: '1px solid blue',
+            padding: '8px'
+        };
+
+        return (<div className="App">
+            <h1> Hi I'm a react app </h1>
+            <button style={style} onClick={() => this.switchNameHandler('React-vers32')}>Switch Name</button>
+            <Person name={this.state.persons[0].name} age={this.state.persons[0].age}/>
+            <Person name={this.state.persons[1].name}
+                    myEvent={this.switchNameHandler.bind(this, 'React-vers2')}
+                    age={this.state.persons[1].age}
+                    changed={this.nameChangedEventHandler}>My Hobbies: Playing</Person>
+            <Person name={this.state.persons[2].name} age={this.state.persons[2].age}/>
+        </div>)
+    }
+```
+- Hovering is difficult when we are using inline styles.
+- We can use global *App.css* file.
