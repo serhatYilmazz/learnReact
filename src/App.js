@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import './App.css';
+import appClasses from './App.css';
+
 import Person from './Person/Person';
 
 class App extends Component {
@@ -57,14 +58,9 @@ class App extends Component {
     };
 
     render() {
-        const style = {
-            backgroundColor: 'white',
-            font: 'inherit',
-            border: '1px solid blue',
-            padding: '8px'
-        };
-
         let persons = null;
+        let btnClass = '';
+
         if (this.state.showPersons) {
             persons = (
                 <div>
@@ -80,12 +76,22 @@ class App extends Component {
                     }
                 </div>
             );
+
+            btnClass = appClasses.red;
+        }
+
+        const classes = [];
+        if (this.state.persons.length <= 2) {
+            classes.push(appClasses.red);
+        }
+        if (this.state.persons.length <= 1) {
+            classes.push(appClasses.bold);
         }
 
         return (
-            <div className="App">
-                <h1> Hi I'm a react app </h1>
-                <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+            <div className={appClasses.App}>
+                <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+                <button className={btnClass} onClick={this.togglePersons}>Toggle Persons</button>
                 {persons}
             </div>
         );

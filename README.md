@@ -994,32 +994,419 @@ nameChangedEventHandler = (event, id) => {
 };
 ```
 Let's dive into it:
-
+---
 ```typescript jsx
 let personIndex = this.state.persons.findIndex(p => {
     return p.id === id
 });
 ```
 - Find index of the person from state.
+---
 ```typescript jsx
 const person = {
        ...this.state.persons[personIndex]
    };
 ```
 - Obtaining person from state with an immutable way.
+---
 ```typescript jsx
 person.name = event.target.value;
 ```
 - Getting new name from input field and change on immutable person's name.
+---
 ```typescript jsx
 const persons = [...this.state.persons];
 persons[personIndex] = person;
 ```
 - Getting the person whose name will change is got immutable way.
 - Changing immutable Person list with changed Person object.
+---
 ```typescript jsx
 this.setState({
             persons: persons
         });
 ``` 
 - It is reflected to state.
+---
+
+## 5 - Styling React Components & Elements
+
+### 5.1 - Setting Styles Dynamically
+We want to change toggle person button background color toggle when we click it. So:
+```typescript jsx
+render() {
+    const style = {
+        backgroundColor: 'green',
+        font: 'inherit',
+        border: '1px solid blue',
+        padding: '8px'
+    };
+
+    let persons = null;
+    if (this.state.showPersons) {
+        persons = (
+            <div>
+                {
+                    this.state.persons.map((person, index) => {
+                        return <Person key={person.id}
+                                       myEvent={this.deletePersonHandler.bind(this, index)}
+                                       name={person.name}
+                                       age={person.age}
+                                       changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                        />
+                    })
+                }
+            </div>
+        );
+
+        style.backgroundColor = 'red';
+    }
+
+    return (
+        <div className="App">
+            <h1> Hi I'm a react app </h1>
+            <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+            {persons}
+        </div>
+    );
+}
+```
+- *style.backgroundColor = 'red';* is applied when *this.state.showPersons* is true.
+- Everything is JS.
+
+### 5.2 - Setting Class Names Dynamically
+We want to apply the rule of:
+- If list size of the person is less than or equal to 2, red,
+- If list size of the person is 1 or less, red and bold.
+
+*App.css*:
+```css
+.red {
+    color: red;
+}
+
+.bold {
+    font-weight: bold;
+}
+```
+*App.js*:
+```typescript jsx
+render() {
+        const style = {
+            backgroundColor: 'green',
+            font: 'inherit',
+            border: '1px solid blue',
+            padding: '8px'
+        };
+
+        let persons = null;
+        if (this.state.showPersons) {
+            persons = (
+                <div>
+                    {
+                        this.state.persons.map((person, index) => {
+                            return <Person key={person.id}
+                                           myEvent={this.deletePersonHandler.bind(this, index)}
+                                           name={person.name}
+                                           age={person.age}
+                                           changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                            />
+                        })
+                    }
+                </div>
+            );
+
+            style.backgroundColor = 'red';
+        }
+
+        const classes = [];
+        if (this.state.persons.length <= 2) {
+            classes.push('red');
+        }
+        if (this.state.persons.length <= 1) {
+            classes.push('bold');
+        }
+
+        return (
+            <div className="App">
+                <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+                <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+                {persons}
+            </div>
+        );
+    }
+```
+- *const classes* is for accumulate css class.
+```typescript jsx
+<h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+```
+- We joined css classes to be formatted valid css class names.
+
+### 5.3 - Adding and Using Radium
+Hover can't be used directly.
+```shell script
+npm install --save radium
+```
+Radium is popular third party library that allows us to use pseudo selectors, media-queries and inline styles.
+```typescript jsx
+import Radium from "radium";
+```
+```typescript jsx
+export default Radium(App);
+```
+- Import it and wrap the App with it.
+- Adding and injecting some functionality to our *App.js*.
+- Wrapping can be used both functional component and class based. 
+```typescript jsx
+render() {
+        const style = {
+            backgroundColor: 'green',
+            font: 'inherit',
+            border: '1px solid blue',
+            padding: '8px',
+            ':hover': {
+                backgroundColor: 'lightgreen',
+                color: 'black'
+            }
+        };
+```
+It can be used as:
+```typescript jsx
+if (this.state.showPersons) {
+            persons = (
+                <div>
+                    {
+                        this.state.persons.map((person, index) => {
+                            return <Person key={person.id}
+                                           myEvent={this.deletePersonHandler.bind(this, index)}
+                                           name={person.name}
+                                           age={person.age}
+                                           changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                            />
+                        })
+                    }
+                </div>
+            );
+
+            style.backgroundColor = 'red';
+            // Hovering is a JS object.
+            style[':hover'] = {
+                backgroundColor: 'salmon',
+                color: 'black'
+            }
+        }
+```
+
+### 5.4 - Using Radium for Media Queries
+- Wrapping app with Radium is enough for Pseudo selectors. But if we want to use *media-queries* we need to use ***StyleRoot***.
+
+*Person.js*:
+```typescript jsx
+import React from "react";
+import Radium from "radium";
+import './Person.css';
+
+const person = (props) => {
+    const style = {
+        '@media (min-width: 500px)': {
+            width: '450px'
+        }
+    };
+    return (
+        <div className="Person" style={style}>
+            <p>I'm {props.name} and I'm {props.age} years old.</p>
+            <input value={props.name} onChange={props.changed} />
+            <button type="button" onClick={props.myEvent}>Delete</button>
+        </div>
+    );
+};
+
+export default Radium(person);
+``` 
+*App.js*:
+```typescript jsx
+import Radium, {StyleRoot} from "radium";
+...
+return (
+            <StyleRoot>
+                <div className="App">
+                    <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+                    <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+                    {persons}
+                </div>
+            </StyleRoot>
+        );
+```
+### 5.5 - Enabling & Using CSS Modules
+If we want to use each component's style responsible for the CSS file whose name is same to JS file of it, we need to enable CSS modules. For this:
+Activate configurations.
+```shell script
+npm run eject
+```
+After execute the command, multiple configuration files come up.
+```
+config --> webpack.config.js:
+{
+  test: cssRegex,
+  exclude: cssModuleRegex,
+  use: getStyleLoaders({
+    importLoaders: 1,
+    sourceMap: isEnvProduction && shouldUseSourceMap,
+  }),
+  sideEffects: true,
+},
+```
+Add:
+```
+use: getStyleLoaders({
+  importLoaders: 1,
+  sourceMap: isEnvProduction && shouldUseSourceMap,
+  modules: {
+    localIdentName: '[name]__[local]__[hash:base64:5]'
+  },
+}),
+```
+- *modules: true* for enabling CSS Modules. (For older versions)
+- *localIdentName*  css classes getting unique name for per component, so that don't override each other applciation wide. 
+    - *[name]* for css class name.
+    - *[local]* will allow css loader to assign it local component. To scope it.
+    - *[hash:base64:5]* unique hash not to override on application wide. 
+
+So now we can use css classes like:
+```typescript jsx
+import appClasses from './App.css';
+...
+return (
+    <div className={appClasses.App}>
+        <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+        <button style={style} onClick={this.togglePersons}>Toggle Persons</button>
+        {persons}
+    </div>
+);
+```
+- *appClasses* now refers to *App.css* file.
+
+*App.css*
+```css
+.App {
+    text-align: center;
+}
+
+.red {
+    color: red;
+}
+
+.bold {
+    font-weight: bold;
+}
+```
+So *appClasses.App* refers *.App* in *App.css*.
+What happened ?:
+- The Css Loader transforms the css class names in the css file into a unique one using the ***localIdentName*** pattern we set up *webpack.config.js* file where it essentially takes the class name to find the file name of the JS file or you import the class and some random hash to generate unique css class names.
+- If we observe the console for changing class names, we can see strange and unique names for each class that defined in *.css* file.
+
+### 5.6 - Adding Pseudo Selectors
+Just define css of those which defined statically in *render()* previously.
+
+*App.css*:
+```css
+.App {
+    text-align: center;
+}
+
+.red {
+    color: red;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.App button {
+    border: 1px solid blue;
+    padding: 16px;
+    background-color: green;
+    font: inherit;
+    color: white
+}
+
+.App button:hover {
+    background-color: lightgreen;
+    color: black;
+}
+
+.App button.red {
+    background-color: red;
+}
+
+.App button.red:hover {
+    background-color: salmon;
+    color: black;
+}
+```
+
+```typescript jsx
+render() {
+    let persons = null;
+    let btnClass = '';
+
+    if (this.state.showPersons) {
+        persons = (
+            <div>
+                {
+                    this.state.persons.map((person, index) => {
+                        return <Person key={person.id}
+                                       myEvent={this.deletePersonHandler.bind(this, index)}
+                                       name={person.name}
+                                       age={person.age}
+                                       changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                        />
+                    })
+                }
+            </div>
+        );
+
+        btnClass = appClasses.red;
+    }
+
+    const classes = [];
+    if (this.state.persons.length <= 2) {
+        classes.push(appClasses.red);
+    }
+    if (this.state.persons.length <= 1) {
+        classes.push(appClasses.bold);
+    }
+
+    return (
+        <div className={appClasses.App}>
+            <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+            <button className={btnClass} onClick={this.togglePersons}>Toggle Persons</button>
+            {persons}
+        </div>
+    );
+}
+```
+- Define *btnClass* for dynamically change it in if statement.
+
+### 5.6 - Working with Media Queries
+*Person.css*:
+```css
+.Person {
+    width: 60%;
+    margin: auto;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    box-shadow: 0 2px 3px #ccc;
+    padding: 16px;
+    text-align: center;
+}
+
+
+@media (max-width: 500px) {
+   .Person {
+       width: 450px;
+       text-align: end;
+   }
+}
+```
+It should work automatically Person component.
