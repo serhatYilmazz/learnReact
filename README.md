@@ -1410,3 +1410,492 @@ render() {
 }
 ```
 It should work automatically Person component.
+
+## Bonus
+Error Boundary is a useful for throwing custom exceptions and displaying them.
+```typescript jsx
+import React, {Component} from "react";
+
+class ErrorBoundary extends Component {
+    state = {
+        hasError: false,
+        errorMessage: ''
+    };
+
+    componentDidCatch = (error, info) => {
+        this.setState({
+            hasError: true,
+            errorMessage: error
+        });
+    };
+
+    render() {
+        if (this.state.hasError) {
+            return <h1>{this.state.errorMessage}</h1>;
+        } else {
+            return this.props.children;
+        }
+    }
+}
+
+export default ErrorBoundary;
+```
+- *componentDidCatch* is a hook that can catch error. 
+- Here we just catching and displaying error message in a custom and good way.
+
+*App.js*
+```typescript jsx
+render() {
+    let persons = null;
+    let btnClass = '';
+
+    if (this.state.showPersons) {
+        persons = (
+            <div>
+                {
+                    this.state.persons.map((person, index) => {
+                        return <ErrorBoundary key={person.id}>
+                            <Person myEvent={this.deletePersonHandler.bind(this, index)}
+                                    name={person.name}
+                                    age={person.age}
+                                    changed={(event) => this.nameChangedEventHandler(event, person.id)}
+                            />
+                        </ErrorBoundary>
+                    })
+                }
+            </div>
+        );
+
+        btnClass = appClasses.red;
+}
+```
+- We wrap *Person* with *ErrorBoundary* component. So *props.children* can display things what is inside.
+- We need to take ***key*** into outer component. Because now the actual element we replicate is ***ErrorBoundary***.
+- It catch the errors that thrown by ***Person*** component.
+```typescript jsx
+const person = (props) => {
+    let rand = Math.random();
+    if (rand > 0.7) {
+        throw new Error('Something went wrong');
+    }
+    return (
+        <div className={classes.Person}>
+            <p>I'm {props.name} a nd I'm {props.age} years old.</p>
+            <input value={props.name} onChange={props.changed} />
+            <button type="button" onClick={props.myEvent}>Delete</button>
+        </div>
+    );
+};
+```
+
+## 6 - Diving Deeper into Components & React Internals
+### 6.1 - A Better Project Structure 
+Restructuring the project like:
+
+-- *assets* (for images)
+
+-- components --> Persons --> Persons.js
+ 
+-- components --> Persons --> Person.js & Person.css
+
+-- components --> Persons --> Cockpit --> Cockpit.js
+
+-- containers --> App.js & App.css & App.test.js
+
+- Cockpit for the JSX that resides in container like
+```typescript jsx
+ return (
+    <div className={appClasses.App}>
+        <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+        <button className={btnClass} onClick={this.togglePersons}>Toggle Persons</button>
+        {persons}
+    </div>
+);
+```  
+here 
+```typescript jsx
+  <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+  <button className={btnClass} onClick={this.togglePersons}>Toggle Persons</button>
+```
+is called as cockpit.
+
+### 6.2 - Splitting an App Into Components
+To better project structure:
+*Cockpit.css*:
+```css
+.red {
+    color: red;
+}
+
+.bold {
+    font-size: 1rem;
+}
+
+.Cockpit button {
+    border: 1px solid blue;
+    padding: 16px;
+    background-color: green;
+    font: inherit;
+    color: white
+}
+
+.Cockpit button:hover {
+    background-color: lightgreen;
+    color: black;
+}
+
+.Cockpit button.red {
+    background-color: red;
+}
+
+.Cockpit button.red:hover {
+    background-color: salmon;
+    color: black;
+}
+```
+Cockpit.js
+```typescript jsx
+import React from "react";
+import appClasses from "../../containers/App.css";
+
+import cockpitClasses from './Cockpit.css';
+
+const cockpit = (props) => {
+    const classes = [];
+    let btnClass = '';
+
+    if (props.showPersons) {
+        btnClass = cockpitClasses.red;
+    }
+    if (props.persons.length <= 2) {
+        classes.push(cockpitClasses.red);
+    }
+    if (props.persons.length <= 1) {
+        classes.push(cockpitClasses.bold);
+    }
+    return (
+        <div className={cockpitClasses.Cockpit}>
+            <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+            <button className={btnClass} onClick={props.togglePersons}>Toggle Persons</button>
+        </div>
+    );
+};
+export default cockpit;
+```
+is for *App.js*:
+```typescript jsx
+return (
+    <div className={appClasses.App}>
+        <Cockpit
+            showPersons={this.state.showPersons}
+            persons={this.state.persons}
+            togglePersons={this.togglePersons}
+        />
+        {persons}
+    </div>
+);
+```
+*App.css*:
+```css
+.App {
+    text-align: center;
+}
+```
+---
+*Persons.js*:
+```typescript jsx
+import React from "react";
+import Person from "./Person/Person";
+
+const persons = (props) => props.persons.map((person, index) => {
+    return <Person key={person.id}
+                   myEvent={() => props.clicked(index)}
+                   name={person.name}
+                   age={person.age}
+                   changed={(event) => props.changed(event, person.id)}
+    />
+});
+export default persons;
+```
+is for *App.js*:
+```typescript jsx
+render() {
+        let persons = null;
+
+
+        if (this.state.showPersons) {
+            persons = <Persons
+                    persons={this.state.persons}
+                    clicked={this.deletePersonHandler}
+                    changed={this.nameChangedEventHandler}/>
+}
+...
+```
+and now *Person.js*:
+```typescript jsx
+import React from "react";
+import Person from "./Person/Person";
+
+const persons = (props) => props.persons.map((person, index) => {
+    return <Person key={person.id}
+                   myEvent={() => props.clicked(index)}
+                   name={person.name}
+                   age={person.age}
+                   changed={(event) => props.changed(event, person.id)}
+    />
+});
+
+export default persons;
+```
+
+And new *App.js*:
+```typescript jsx
+import React, {Component} from 'react';
+import appClasses from './App.css';
+import Persons from "../components/Persons/Persons";
+import Cockpit from "../components/Cockpit/Cockpit";
+
+class App extends Component {
+    state = {
+        persons: [
+            {"id": "asd123", "name": "React", "age": 5},
+            {"id": "bcd3214", "name": "Angular", "age": 6},
+            {"id": "fghrwt31", "name": "Vue", "age": 4}
+        ],
+        otherState: 'some other value',
+        showPersons: false
+    };
+
+    switchNameHandler = (newName) => {
+        this.setState({
+            persons: [
+                {"name": newName, "age": 5.5555},
+                {"name": "Angularrr", "age": 6.77},
+                {"name": "Vue", "age": 4.66}
+            ]
+        });
+    };
+
+    nameChangedEventHandler = (event, id) => {
+        let personIndex = this.state.persons.findIndex(p => {
+            return p.id === id
+        });
+        const person = {
+            ...this.state.persons[personIndex]
+        };
+
+        person.name = event.target.value;
+
+        const persons = [...this.state.persons];
+        persons[personIndex] = person;
+
+        this.setState({
+            persons: persons
+        });
+    };
+
+    togglePersons = () => {
+        const current = this.state.showPersons;
+        this.setState({
+            showPersons: !current
+        })
+    };
+
+    deletePersonHandler = (index) => {
+        const persons = this.state.persons;
+        persons.splice(index, 1);
+        this.setState({
+            persons: persons
+        })
+    };
+
+    render() {
+        let persons = null;
+
+
+        if (this.state.showPersons) {
+            persons = <Persons
+                    persons={this.state.persons}
+                    clicked={this.deletePersonHandler}
+                    changed={this.nameChangedEventHandler}/>
+        }
+
+
+        return (
+            <div className={appClasses.App}>
+                <Cockpit
+                    showPersons={this.state.showPersons}
+                    persons={this.state.persons}
+                    togglePersons={this.togglePersons}
+                />
+                {persons}
+            </div>
+        );
+    }
+}
+
+export default App;
+```
+
+### 6.3 - Comparing Stateless and Stateful Components
+- Stateful (Containers):
+    - [x] Access to state
+    - [x] Lifecycle Hooks
+    - Access props via ***this***
+- Stateless
+    - [ ] Access to state
+    - [ ] Lifecycle Hooks
+    - Access props via ***props***
+
+- We can use ***props*** in stateful components, like ***state***, ***props*** is also reserved word and can be used as ***this.props***.
+
+### 6.4 - Understanding the Component Lifecycle
+In component creation:
+ 1. *constructor()* (default in ES6 class feature) (If implement constructor, call *super(props)*)
+ 2. *componentWillMount()*
+ 3. *render()*
+    3. *render()* child components
+ 4. *componentDidMount()* (Don't call ***setState***)
+ 
+ ### 6.5 - Converting Stateless to Stateful Components
+ *Persons.js*:
+ ```typescript jsx
+import React from "react";
+import Person from "./Person/Person";
+
+const persons = (props) => props.persons.map((person, index) => {
+    return <Person key={person.id}
+                   myEvent={() => props.clicked(index)}
+                   name={person.name}
+                   age={person.age}
+                   changed={(event) => props.changed(event, person.id)}
+    />
+});
+
+export default persons;
+``` 
+ to
+```typescript jsx
+import React, {Component} from "react";
+import Person from "./Person/Person";
+
+class Persons extends Component {
+
+    render() {
+        return this.props.persons.map((person, index) => {
+            return <Person key={person.id}
+                           myEvent={() => this.props.clicked(index)}
+                           name={person.name}
+                           age={person.age}
+                           changed={(event) => this.props.changed(event, person.id)}
+            />
+        });
+    }
+}
+
+export default Persons;
+```
+*Person.js*:
+```typescript jsx
+import React from "react";
+import classes from './Person.css';
+
+const person = (props) => {
+    return (
+        <div className={classes.Person}>
+            <p>I'm {props.name} and I'm {props.age} years old.</p>
+            <input value={props.name}  onChange={props.changed} />
+            <button type="button" onClick={props.myEvent}>Delete</button>
+        </div>
+    );
+};
+
+export default person;
+```
+to
+```typescript jsx
+import React, {Component} from "react";
+import classes from './Person.css';
+
+class Person extends Component {
+    render() {
+        return (
+            <div className={classes.Person}>
+                <p>I'm {this.props.name} and I'm {this.props.age} years old.</p>
+                <input value={this.props.name}  onChange={this.props.changed} />
+                <button type="button" onClick={this.props.myEvent}>Delete</button>
+            </div>
+        );
+    }
+}
+
+export default Person;
+```
+
+### 6.6 - Component Creation Lifecycle in Action
+If we add the hooks all of them like:
+
+*Person.js*: 
+```typescript jsx
+import React, {Component} from "react";
+import classes from './Person.css';
+
+class Person extends Component {
+
+    constructor(props) {
+        super(props);
+        console.log('[Person.js] Inside Constructor', props);
+        this.state = {
+            persons: [
+                {"id": "asd123", "name": "React", "age": 5},
+                {"id": "bcd3214", "name": "Angular", "age": 6},
+                {"id": "fghrwt31", "name": "Vue", "age": 4}
+            ],
+            otherState: 'some other value',
+            showPersons: false
+        };
+    }
+
+    componentWillMount() {
+        console.log('[Person.js] Inside componentWillMount');
+    }
+
+    componentDidMount() {
+        console.log('[Person.js] Inside componentDidMount');
+    }
+
+    render() {
+        console.log('[Person.js] Inside render()');
+        return (
+            <div className={classes.Person}>
+                <p>I'm {this.props.name} and I'm {this.props.age} years old.</p>
+                <input value={this.props.name}  onChange={this.props.changed} />
+                <button type="button" onClick={this.props.myEvent}>Delete</button>
+            </div>
+        );
+    }
+}
+
+export default Person;
+```
+    [App.js] Inside Constructor {}
+    [App.js] Inside componentWillMount
+    [App.js] Inside render()
+    [App.js] Inside componentDidMount
+    [App.js] Inside render()
+    [Persons.js] Inside Constructor {persons: Array(3), clicked: ƒ, changed: ƒ}
+    [Persons.js] Inside componentWillMount
+    [Persons.js] Inside render
+    [Person.js] Inside Constructor {name: "React", age: 5, myEvent: ƒ, changed: ƒ}
+    [Person.js] Inside componentWillMount
+    [Person.js] Inside render
+    [Person.js] Inside Constructor {name: "Angular", age: 6, myEvent: ƒ, changed: ƒ}
+    [Person.js] Inside componentWillMount
+    [Person.js] Inside render
+    [Person.js] Inside Constructor {name: "Vue", age: 4, myEvent: ƒ, changed: ƒ}
+    [Person.js] Inside componentWillMount
+    [Person.js] Inside render
+    (3 times) [Person.js] Inside componentDidMount
+    [Persons.js] Inside componentDidMount
+
+### 6.7 - Component Updating Lifecycle Hooks
