@@ -1,6 +1,10 @@
 import React, {Component} from "react";
 import classes from './Person.css';
 
+import withClass from '../../../hoc/WithClass';
+import Sero from '../../../hoc/Sero';
+import PropTypes from 'prop-types';
+
 class Person extends Component {
 
     constructor(props) {
@@ -23,18 +27,31 @@ class Person extends Component {
 
     componentDidMount() {
         console.log('[Person.js] Inside componentDidMount');
+        if (this.props.position === 0) {
+            this.someElement.focus();
+        }
     }
 
     render() {
         console.log('[Person.js] Inside render');
         return (
-            <div className={classes.Person}>
+            <Sero className={classes.Person}>
                 <p>I'm {this.props.name} and I'm {this.props.age} years old.</p>
-                <input value={this.props.name}  onChange={this.props.changed} />
+                <input ref={(inp) => {
+                    this.someElement = inp;
+                }}
+                       value={this.props.name} onChange={this.props.changed}/>
                 <button type="button" onClick={this.props.myEvent}>Delete</button>
-            </div>
+            </Sero>
         );
     }
 }
 
-export default Person;
+Person.propTypes = {
+    click: PropTypes.func,
+    name: PropTypes.string,
+    age: PropTypes.number,
+    changed: PropTypes.func
+};
+
+export default withClass(Person, classes.Person);

@@ -1931,3 +1931,267 @@ Component and child components update when ***State*** or ***Props*** change.
 - If a button text is changed, it will only update the text, not render the whole button.
 - Reaching real DOM directly is too costly.
 - First comparing virtual DOM's, after updating only changed component in Real DOM process is called ***reconciliation***.
+
+### 6.11 - Returning Adjacent Elements (React 16+)
+In *src/hoc/Sero.js*:
+```typescript jsx
+const sero = (props) => props.children;
+
+export default sero;
+```
+and use it 
+
+*Cockpit.js*:
+```typescript jsx
+    return (
+        <Sero>
+            <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
+            <button className={btnClass} onClick={props.togglePersons}>Toggle Persons</button>
+        </Sero>
+    );
+```
+It facilitates to avoid styles changing like *flex* or something. Because we get rid of enclosing *div*.
+
+### 6.12 - Understanding Higher Order Components (HOCs)
+It actually wraps another components. We can use a HOC instead of outer div here to take a css class:
+```typescript jsx
+ <div className={appClasses.App}>
+    <Cockpit
+        showPersons={this.state.showPersons}
+        persons={this.state.persons}
+        togglePersons={this.togglePersons}
+    />
+    {persons}
+</div>
+```
+*/hoc/WithClass.js*: 
+```typescript jsx
+import React from "react";
+
+const withClass = (props) => (
+    <div className={props.className}>
+        {props.children}
+    </div>
+);
+
+export default withClass;
+```
+and *App.js*:
+```typescript jsx
+ return (
+    <WithClass className={appClasses.App}>
+        <Cockpit
+            showPersons={this.state.showPersons}
+            persons={this.state.persons}
+            togglePersons={this.togglePersons}
+        />
+        {persons}
+    </WithClass>
+);
+```
+It wraps the content in a div and assigns the CSS class. Do the same thing to *Person.js*.
+
+### 6.13 - A Different Approach to HOCs
+Let's change *WithClass* with *withClass* (for convention):
+```typescript jsx
+import React from 'react';
+
+const withClass = (WrappedComponent, className) => {
+    return (props) => (
+        <div className={className}>
+            <WrappedComponent/>
+        </div>
+    )
+};
+
+export default withClass;
+```
+Here is currying functions. It is actually:
+```typescript jsx
+function withClass (WrappedComponent, className) {
+    return function(props) {
+      return <div className={className}>
+                 <WrappedComponent/>
+             </div>;
+    }
+};
+```
+and it should be used as:
+```typescript jsx
+render() {
+    console.log('[App.js] Inside render()');
+    let persons = null;
+    if (this.state.showPersons) {
+        persons = <Persons
+            persons={this.state.persons}
+            clicked={this.deletePersonHandler}
+            changed={this.nameChangedEventHandler}/>
+    }
+    return (
+        <Sero className={appClasses.App}>
+            <Cockpit
+                showPersons={this.state.showPersons}
+                persons={this.state.persons}
+                togglePersons={this.togglePersons}
+            />
+            {persons}
+        </Sero>
+    );
+}
+export default withClass(App, appClasses.App);
+```
+Now, there is a problem. Two-way binding with input fields are gone.
+
+### 6.14 - Passing Unknown Props
+```typescript jsx
+import React from 'react';
+
+const withClass = (WrappedComponent, className) => {
+    return (props) => (
+        <div className={className}>
+            <WrappedComponent {...props}/>
+        </div>
+    )
+};
+
+export default withClass;
+```
+```typescript jsx
+<WrappedComponent {...props}/>
+```
+is sent ***props*** to relevant component. It does not have to return functional component.
+```typescript jsx
+import React, {Component} from 'react';
+
+const withClass = (WrappedComponent, className) => {
+    return class extends Component {
+        render() {
+            return <div className={className}>
+                <WrappedComponent {...this.props}/>
+            </div>
+        }
+    };
+};
+
+export default withClass;
+```
+with anonymous class. Now ***props*** becomes ***this.props***.
+
+### 6.15 -  Using setState Correctly
+```typescript jsx
+togglePersons = () => {
+      const current = this.state.showPersons;
+      this.setState({
+          showPersons: !current,
+          toggleClicked: this.state.toggleClicked + 1
+      });
+};
+```
+We set state by calling ***this.state.toggleClicked***. But ***this.setState*** is called by React asynchronously. It can cause this call to ***this.setState*** reaches stale data. Because it can be called by any other container and state changed is done at the same time. Then it is not reflected to here immediately. Therefore:
+```typescript jsx
+togglePersons = () => {
+    const current = this.state.showPersons;
+    this.setState((prevState, props) => {
+        return {
+            showPersons: !current,
+            toggleClicked: prevState.toggleClicked + 1
+        };
+    });
+};
+```
+### 6.16 - Validating Props
+If we do something like calculations with props, we need certain types. We want to check incoming types
+```shell script
+npm install --save prop-types
+```
+*Person.js*:
+```typescript jsx
+import React, {Component} from "react";
+import classes from './Person.css';
+
+import withClass from '../../../hoc/WithClass';
+import Sero from '../../../hoc/Sero';
+import PropTypes from 'prop-types';
+
+class Person extends Component {
+
+    constructor(props) {
+        super(props);
+        console.log('[Person.js] Inside Constructor', props);
+        this.state = {
+            persons: [
+                {"id": "asd123", "name": "React", "age": 5},
+                {"id": "bcd3214", "name": "Angular", "age": 6},
+                {"id": "fghrwt31", "name": "Vue", "age": 4}
+            ],
+            otherState: 'some other value',
+            showPersons: false
+        };
+    }
+
+    componentWillMount() {
+        console.log('[Person.js] Inside componentWillMount');
+    }
+
+    componentDidMount() {
+        console.log('[Person.js] Inside componentDidMount');
+    }
+
+    render() {
+        console.log('[Person.js] Inside render');
+        return (
+            <Sero className={classes.Person}>
+                <p>I'm {this.props.name} and I'm {this.props.age} years old.</p>
+                <input value={this.props.name}  onChange={this.props.changed} />
+                <button type="button" onClick={this.props.myEvent}>Delete</button>
+            </Sero>
+        );
+    }
+}
+
+Person.propTypes = {
+    click: PropTypes.func,
+    name: PropTypes.string,
+    age: PropTypes.number,
+    changed: PropTypes.func
+};
+
+export default withClass(Person, classes.Person);
+```
+in 
+```typescript jsx
+import PropTypes from 'prop-types';
+...
+Person.propTypes = {
+    click: PropTypes.func,
+    name: PropTypes.string,
+    age: PropTypes.number,
+    changed: PropTypes.func
+};
+```
+
+### 6.17 - Using References (_ref_)
+- References are only available in stateful components.
+- We can referenced a variable by using:
+```typescript jsx
+render() {
+    console.log('[Person.js] Inside render');
+    return (
+        <Sero className={classes.Person}>
+            <p>I'm {this.props.name} and I'm {this.props.age} years old.</p>
+            <input ref={(inp) => {
+                this.someElement = inp;
+            }}
+                   value={this.props.name} onChange={this.props.changed}/>
+            <button type="button" onClick={this.props.myEvent}>Delete</button>
+        </Sero>
+    );
+}
+```
+and we can use ***this.someElement*** within ***componentDidMount()*** since it is executed after ***render()*** is executed. For example:
+```typescript jsx
+componentDidMount() {
+    console.log('[Person.js] Inside componentDidMount');
+        this.someElement.focus();
+}
+```
