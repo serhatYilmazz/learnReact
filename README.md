@@ -1496,7 +1496,7 @@ Restructuring the project like:
 
 -- components --> Persons --> Persons.js
  
--- components --> Persons --> Person.js & Person.css
+-- components --> Persons --> Person --> Person.js & Person.css
 
 -- components --> Persons --> Cockpit --> Cockpit.js
 
@@ -1899,3 +1899,35 @@ export default Person;
     [Persons.js] Inside componentDidMount
 
 ### 6.7 - Component Updating Lifecycle Hooks
+  
+1. *componentWillReceiveProps(nextProps)*: sync state to props
+2. *shouldComponentUpdate(nextProps, nextState)*: decide whether to continue or not. It may cancel updating process. If returns true; updating continues, if return false; we stop the whole process. So below methods won't be executed. So new changed DOM does not reflected to screen.
+3. *componentWillUpdate(nextProps, nextState)*: sync state to props.
+4. *render()*:
+    - Update child component props
+5. *componentDidUpdate()*: (Don't call ***setState***)
+
+### 6.8 - Performance Gains with PureComponents
+
+*Persons.js*:
+```typescript jsx
+shouldComponentUpdate(nextProps, nextState, nextContext) {
+      console.log('[UPDATE Persons.js] Inside shouldComponentUpdate()', nextProps, nextState);
+      return nextProps.persons !== this.props.persons ||
+          nextProps.changed !== this.props.changed ||
+          nextProps.clicked !== this.props.clicked;
+}
+```
+- Here we compare if anything changes in upper component to the inner component. If anything change, we trigger *render()* method, if nothing changes, the method returns false and it causes not to execute *render()*. It provides some performance gain since if everything same, why we render the whole components again.
+- It is handled by ***PureComponent*** in React library. If we extend it instead ***Component*** we can see React handles all the staff above in its own for us.
+
+### 6.9 - How React Updates the App & Component Tree
+Component and child components update when ***State*** or ***Props*** change.
+
+### 6.10 - Understanding React's DOM Updating Strategy
+- *render()* method being called does not immediately also render this to the real DOM.
+- Firstly, it compares old virtual DOM and re-rendered virtual DOM. (Virtual DOM simply is a DOM representation in JS. We can represent all HTML and therefore DOM elements and objects in pure JS without rendering anything to the browser.)
+- If difference is found, it reached real DOM and updates it.
+- If a button text is changed, it will only update the text, not render the whole button.
+- Reaching real DOM directly is too costly.
+- First comparing virtual DOM's, after updating only changed component in Real DOM process is called ***reconciliation***.

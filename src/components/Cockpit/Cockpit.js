@@ -16,7 +16,7 @@ const cockpit = (props) => {
         classes.push(cockpitClasses.bold);
     }
     return (
-        <div className={cockpitClasses.Cockpit}>
+        <div>
             <h1 className={classes.join(' ')}> Hi I'm a react app </h1>
             <button className={btnClass} onClick={props.togglePersons}>Toggle Persons</button>
         </div>
