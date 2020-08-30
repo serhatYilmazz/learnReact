@@ -2177,5 +2177,691 @@ and we can use ***this.someElement*** within ***componentDidMount()*** since it 
 componentDidMount() {
     console.log('[Person.js] Inside componentDidMount');
         this.someElement.focus();
+} 
+```
+
+### 7 - Burger Builder
+
+### 7.1 - Planning our App - Layout and Component Tree
+
+- App
+    - Layout
+        - Toolbar
+            - Drawer Toggle
+            - Logo
+            - Navigation Items
+        - Side Drawer
+            - Logo
+            - Navigation Items
+        - Backdrop
+        - {props.children}
+            - Different pages
+                - Burger Builder
+                    - Build Controls
+                        - Build control
+                        - Build control
+                        - ...
+                        - Order button
+                    - Burger Preview
+                        - Ingredients
+                    - Modal for checkout
+                        - Wrapper component ({props.children})
+                        
+### 7.2 - Planning the State
+- State
+
+```json
+{ 
+  "ingredients":  { 
+    "meets": 1, 
+    "cheese":  2
+  },
+  "purchased":  true,
+  "totalPrice":  12.99
 }
 ```
+- We should manage the state in *Burder Builder*.
+- So *Burger Builder* can be stateful component.
+
+### 7.3 - Creating a Layout Component
+As a structure:
+
+- hoc --> Auxilary.js:
+```typescript jsx
+const auxilary = (props) => props.children;
+
+export default auxilary;
+```
+- containers
+- components --> Layout --> Layout.js:
+```typescript jsx
+import React from "react";
+import Aux from '../../hoc/Auxilary';
+
+const layout = (props) => (
+    <Aux>
+        <div>Toolbar, backdrop</div>
+        <main>
+            {props.children}
+        </main>
+    </Aux>
+);
+export default layout;
+```
+
+### 7.4 - Starting Implementation of The Burger Builder Container
+
+- containers --> BurgerBuilder.js
+```typescript jsx
+import React, {Component} from "react";
+import Aux from '../hoc/Auxilary';
+
+class BurgerBuilder extends Component {
+
+    render() {
+        return (
+             <Aux>
+                <div>Burger</div>
+                <div>Build Controls</div>
+             </Aux>
+        );
+    }
+}
+export default BurgerBuilder;
+```
+*App.js*:
+```typescript jsx
+render() {
+    return (
+        <Layout>
+            <BurgerBuilder />
+        </Layout>
+    );
+}
+```
+*Layout.js*:
+```typescript jsx
+const layout = (props) => (
+    <Aux>
+        <div>Toolbar, backdrop</div>
+        <main className={layoutCss.Content}>
+            {props.children}
+        </main>
+    </Aux>
+);
+```
+*Layout.css*:
+```css
+.Content {
+    margin-top: 16px;
+}
+```
+
+### 7.5 - Adding a Dynamic Ingredient Component
+
+*BurgerIngredient*:
+```typescript jsx
+import React from "react";
+
+import classes from './BurgerIngredient.css';
+
+const burgerIngredients = (props) => {
+    let ingredient = null;
+
+    switch (props.type) {
+        case ('bread-bottom'):
+            ingredient = <div className={classes.BreadBottom}></div>;
+        break;
+        case ('bread-top'):
+            ingredient = (
+                <div className={classes.BreadTop}>
+                    <div className={classes.Seeds1}></div>
+                    <div className={classes.Seeds2}></div>
+                </div>
+            );
+            break;
+        case ('meat'):
+            ingredient = <div className={classes.Meat}></div>;
+            break;
+        case ('bacon'):
+            ingredient = <div className={classes.Bacon}></div>;
+            break;
+        case ('cheese'):
+            ingredient = <div className={classes.Cheese}></div>;
+            break;
+        case ('salad'):
+            ingredient = <div className={classes.Salad}></div>;
+            break;
+        default:
+            ingredient = null;
+    }
+    return ingredient;
+};
+
+export default burgerIngredients;
+```
+
+### 7.6 - Adding Prop Type Validation
+To use ***Props Types***, we need class to validate. After converting *burgerIngredient* to stateful component:
+```typescript jsx
+BurgerIngredient.propTypes = {
+    type: PropTypes.string.isRequired
+};
+```
+
+### 7.7 - Starting the Burger Component
+To obtain this:
+![Burger](readmeAssets/Burger.png)
+- components --> Burger --> BurgerIngredient --> BurgerIngredient.css:
+```css
+.BreadBottom {
+    height: 13%;
+    width: 80%;
+    background: linear-gradient(#F08E4A, #e27b36);
+    border-radius: 0 0 30px 30px;
+    box-shadow: inset -15px 0 #c15711;
+    margin: 2% auto;
+}
+
+.BreadTop {
+    height: 20%;
+    width: 80%;
+    background: linear-gradient(#bc581e, #e27b36);
+    border-radius: 50% 50% 0 0;
+    box-shadow: inset -15px 0 #c15711;
+    margin: 2% auto;
+    position: relative;
+}
+
+.Seeds1 {
+    width: 10%;
+    height: 15%;
+    position: absolute;
+    background-color: white;
+    left: 30%;
+    top: 50%;
+    border-radius: 40%;
+    transform: rotate(-20deg);
+    box-shadow: inset -2px -3px #c9c9c9;
+}
+
+.Seeds1:after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-color: white;
+    left: -170%;
+    top: -260%;
+    border-radius: 40%;
+    transform: rotate(60deg);
+    box-shadow: inset -1px 2px #c9c9c9;
+  }
+
+.Seeds1:before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-color: white;
+    left: 180%;
+    top: -50%;
+    border-radius: 40%;
+    transform: rotate(60deg);
+    box-shadow: inset -1px -3px #c9c9c9;
+  }
+
+  .Seeds2 {
+    width: 10%;
+    height: 15%;
+    position: absolute;
+    background-color: white;
+    left: 64%;
+    top: 50%;
+    border-radius: 40%;
+    transform: rotate(10deg);
+    box-shadow: inset -3px 0 #c9c9c9;
+  }
+  
+  .Seeds2:before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-color: white;
+    left: 150%;
+    top: -130%;
+    border-radius: 40%;
+    transform: rotate(90deg);
+    box-shadow: inset 1px 3px #c9c9c9;
+  }
+  
+
+.Meat {
+    width: 80%;
+    height: 8%;
+    background: linear-gradient(#7f3608, #702e05);
+    margin: 2% auto;
+    border-radius: 15px;
+}
+
+.Cheese {
+    width: 90%;
+    height: 4.5%;
+    margin: 2% auto;
+    background: linear-gradient(#f4d004, #d6bb22);
+    border-radius: 20px;
+}
+
+.Salad {
+    width: 85%;
+    height: 7%;
+    margin: 2% auto;
+    background: linear-gradient(#228c1d, #91ce50);
+    border-radius: 20px;
+}
+
+.Bacon {
+    width: 80%;
+    height: 3%;
+    background: linear-gradient(#bf3813, #c45e38);
+    margin: 2% auto;
+}
+```
+
+- components --> Burger --> Burger.css:
+```css
+.Burger {
+    width: 100%;
+    margin: auto;
+    height: 250px;
+    /*overflow: scroll;*/
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+@media (min-width: 1000px) and (min-height: 700px) {
+    .Burger {
+        width: 700px;
+        height: 600px;
+    }
+}
+
+@media (min-width: 500px) and (min-height: 401px) {
+    .Burger {
+        width: 450px;
+        height: 400px;
+    }
+}
+
+@media (min-width: 500px) and (min-height: 400px) {
+    .Burger {
+        width: 350px;
+        height: 300px;
+    }
+}
+```
+- components --> Burger --> Burger.js:
+```typescript jsx
+import React from "react";
+
+import classes from './Burger.css';
+import BurgerIngredient from "./BurgerIngredient/BurgerIngredient";
+
+const burger = (props) => {
+    return (
+        <div className={classes.Burger}>
+            <BurgerIngredient type="bread-top" />
+            <BurgerIngredient type="meat" />
+            <BurgerIngredient type="bacon" />
+            <BurgerIngredient type="salad" />
+            <BurgerIngredient type="bacon" />
+            <BurgerIngredient type="bread-bottom" />
+        </div>
+    );
+};
+
+export default burger;
+```
+and in *BurgerBuilder.js*:
+```typescript jsx
+import Burger from '../components/Burger/Burger';
+...
+render() {
+    return (
+         <Aux>
+             <Burger />
+             <div>Build Controls</div>
+         </Aux>
+    );
+}
+```
+### 7.8 - Outputting Burger Ingredients Dynamically
+*BurgerBuilder.js*:
+```typescript jsx
+import React, {Component} from "react";
+import Aux from '../hoc/Auxilary';
+import Burger from '../components/Burger/Burger';
+
+class BurgerBuilder extends Component {
+    state = {
+        ingredients: {
+            salad: 1,
+            bacon: 1,
+            cheese: 2,
+            meat: 2
+        }
+    };
+
+    render() {
+        return (
+            <Aux>
+                <Burger ingredients={this.state.ingredients} />
+                <div>Build Controls</div>
+            </Aux>
+        );
+    }
+}
+
+export default BurgerBuilder;
+```
+*Burger.js*:
+```typescript jsx
+import React from "react";
+
+import classes from './Burger.css';
+import BurgerIngredient from "./BurgerIngredient/BurgerIngredient";
+
+const burger = (props) => {
+    const ingredients = [];
+    for (let prop in props.ingredients) {
+        for (let i = 0; i < props.ingredients[prop]; i++) {
+            ingredients.push(<BurgerIngredient key={prop + i} type={prop}/>);
+        }
+    }
+
+    return (<div className={classes.Burger}>
+        <BurgerIngredient key={'breadTop'} type={'bread-top'} />
+        {ingredients}
+        <BurgerIngredient key={'breadBottom'} type={'bread-bottom'} />
+    </div> );
+};
+
+export default burger;
+```
+### Reduce operation in JS:
+```javascript
+let sum = [0, 1, 2, 3].reduce(function (accumulator, currentValue) {
+  return accumulator + currentValue
+}, 0)
+```
+- First argument is callback function
+- 0 is initial value and **if an initial value is passed, reduce operation starts from 0. index**, if it does not passed, it starts from 1. index.
+Flatten an array of arrays:
+```javascript
+let flattened = [[0, 1], [2, 3], [4, 5]].reduce(
+  function(accumulator, currentValue) {
+    return accumulator.concat(currentValue)
+  },
+  []
+)
+// flattened is [0, 1, 2, 3, 4, 5]
+```
+- [] is identity element.
+- *concat()* on *Array*, concatenate two or more arrays.
+```javascript
+[0, 1, 2, 3, 4].reduce( (accumulator, currentValue, currentIndex, array) => accumulator + currentValue )
+```
+- It starts from 1. index since there is no identity element.
+- *currentIndex* is the index that shows index number of the *currentValue* element.
+- *array* is the array with initial values. ([0, 1, 2, 3, 4])
+
+### 7.9 - Calculating the Ingredient Sum Dynamically
+*BurgerBuilder.js*:
+```typescript jsx
+state = {
+    ingredients: {
+        salad: 0,
+        bacon: 0,
+        cheese: 0,
+        meat: 0
+    }
+};
+```
+*Burger.js*:
+```typescript jsx
+const burger = (props) => {
+    let ingredients = [];
+    for (let prop in props.ingredients) {
+        for (let i = 0; i < props.ingredients[prop]; i++) {
+            ingredients.push(<BurgerIngredient key={prop + i} type={prop}/>);
+        }
+    }
+
+    const numberOfIngredients = ingredients.reduce((acc, curr) => acc.concat(curr), []);
+    if (numberOfIngredients.length === 0) {
+           ingredients.push(<p> Please start adding ingredients. </p>)
+    }
+
+    return (<div className={classes.Burger}>
+        <BurgerIngredient key={'breadTop'} type={'bread-top'} />
+        {ingredients}
+        <BurgerIngredient key={'breadBottom'} type={'bread-bottom'} />
+    </div> );
+};
+```
+and getting:
+
+![BurgerNoIngredients](readmeAssets/burgerNoIngredients.png)
+
+### 7.10 - Adding the Build Control Component
+
+- components --> Burger --> BurgerControls --> BurgerControls.css:
+```css
+.BurgerControls {
+    margin: 0 auto;
+    background-color: #bc581e;
+    width: 50%;
+    border-radius: 20px;
+    padding: 16px;
+}
+```
+- components --> Burger --> BurgerControls --> BurgerControls.js:
+```typescript jsx
+import React from "react";
+
+import BurgerControl from './BurgerControl/BurgerControl';
+
+import classes from './BurgerControls.css';
+
+const controls = [
+    {label: 'Meat', type: 'meat'},
+    {label: 'Salad', type: 'salad'},
+    {label: 'Bacon', type: 'bacon'},
+    {label: 'Cheese', type: 'cheese'},
+];
+
+const burgerControls = (props) => (
+    <div className={classes.BurgerControls}>
+        {controls.map(control => <BurgerControl label={control.label} />)}
+    </div>
+);
+
+export default burgerControls;
+``` 
+
+- components --> Burger --> BurgerControls --> BurgerControl --> BurgerControl.css:
+```css
+.BurgerControl {
+    text-align: center;
+    margin: 10px auto;
+    color: black;
+    font-family: "Comic Sans MS", serif;
+    font-weight: bold;
+}
+
+.BurgerControl .LessButton {
+    margin-left: 10px;
+    padding: 16px;
+    background-color: #ff3d03;
+    border-radius: 10px 0 10px 0;
+    box-shadow: 1px 2px 3px #ff5a0d;
+    color: white;
+    border: 1px solid #702e05;
+    cursor: pointer;
+    user-select: none;
+}
+
+.BurgerControl .LessButton:disabled {
+    background-color: #b0aaa9;
+    cursor: not-allowed;
+    box-shadow: transparent 0 0;
+    opacity: 0.5;
+}
+
+.BurgerControl .LessButton:disabled:hover {
+    background-color: #b0aaa9;
+    box-shadow: transparent 0 0;
+    color: white;
+}
+
+.BurgerControl .MoreButton {
+    margin-left: 10px;
+    padding: 16px;
+    background-color: #702e05;
+    border-radius: 0px 10px 0px 10px;
+    box-shadow: 1px 2px 3px #ff5a0d;
+    color: #ffa529;
+    border: 1px solid #702e05;
+    cursor: pointer;
+    user-select: none;
+}
+
+.BurgerControl button:hover {
+    color: black;
+    background-color: transparent;
+    box-shadow: #ffaca3 1px 1px 15px ;
+}
+
+.BurgerControl button:active {
+    background-color: #DAA972;
+    color: white;
+}
+```
+
+- components --> Burger --> BurgerControls --> BurgerControl --> BurgerControl.js:
+```typescript jsx
+import React from "react";
+import classes from './BurgerControl.css';
+
+const burgerControl = (props) => (
+    <div className={classes.BurgerControl}>
+        <p>{props.label}
+            <button className={classes.LessButton}> Less </button>
+            <button className={classes.MoreButton}> More </button>
+        </p>
+    </div>
+);
+
+export default burgerControl;
+```
+and after that:
+
+![BurgerControl](readmeAssets/BurgerControl.png)
+
+### 7.11 - Adding and Removing
+*BurgerBuilder.js*:
+```typescript jsx
+import React, {Component} from "react";
+import Aux from '../hoc/Auxilary';
+import Burger from '../components/Burger/Burger';
+import BurgerControls from '../components/Burger/BurgerControls/BurgerControls';
+
+const INGREDIENT_PRICES = {
+    salad: 0.5,
+    cheese: 0.4,
+    meat: 1.3,
+    bacon: 0.7
+};
+
+class BurgerBuilder extends Component {
+    state = {
+        ingredients: {
+            salad: 0,
+            bacon: 0,
+            cheese: 0,
+            meat: 0
+        },
+        totalPrice: 4
+    };
+
+    addIngredientHandler = (type) => {
+        const oldCount = this.state.ingredients[type];
+        const updatedCount = oldCount + 1;
+        const immIngredients = {...this.state.ingredients};
+        immIngredients[type] = updatedCount;
+        const oldPrice = this.state.totalPrice;
+        const newPrice = oldPrice + INGREDIENT_PRICES[type];
+        this.setState((prevState, props) => {
+            return {
+                totalPrice: newPrice,
+                ingredients: immIngredients
+            }
+        });
+    };
+
+    removeIngredient = (type) => {
+        const oldCount = this.state.ingredients[type];
+        if (oldCount > 0) {
+            const newCount = oldCount - 1;
+            const immIngredients = {...this.state.ingredients};
+            immIngredients[type] = newCount;
+            const newTotalPrice = this.state.totalPrice - INGREDIENT_PRICES[type];
+            this.setState((prevState, props) => {
+                return {
+                    totalPrice: newTotalPrice,
+                    ingredients: immIngredients
+                };
+            });
+        }
+    };
+
+    render() {
+        return (
+            <Aux>
+                <Burger ingredients={this.state.ingredients}/>
+                <BurgerControls disableActions={this.state.ingredients} 
+                                ingredientAdded={this.addIngredientHandler} 
+                                ingredientRemoved={this.removeIngredient}/>
+            </Aux>
+        );
+    }
+}
+export default BurgerBuilder;
+```
+*BurgerControls.js*:
+```typescript jsx
+const burgerControls = (props) => (
+    <div className={classes.BurgerControls}>
+        {controls.map(control => <BurgerControl key={control.label}
+                                                label={control.label}
+                                                ingredientAdded={props.ingredientAdded.bind(this, control.type)}
+                                                ingredientRemoved={props.ingredientRemoved.bind(this, control.type)}
+                                                disableActions={props.disableActions[control.type]}
+        />)}
+    </div>
+);
+```
+*BurgerControl.js*:
+```typescript jsx
+const burgerControl = (props) => (
+    <div className={classes.BurgerControl}>
+        <p>{props.label}
+            <button disabled={props.disableActions === 0} className={classes.LessButton} onClick={props.ingredientRemoved}> Less </button>
+            <button className={classes.MoreButton} onClick={props.ingredientAdded}> More </button>
+        </p>
+    </div>
+);
+```
+![AddinRemoving](readmeAssets/AddingRemoving.png)

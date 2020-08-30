@@ -1,0 +1,55 @@
+.BurgerControl {
+    text-align: center;
+    margin: 10px auto;
+    color: black;
+    font-family: "Comic Sans MS", serif;
+    font-weight: bold;
+}
+
+.BurgerControl .LessButton {
+    margin-left: 10px;
+    padding: 16px;
+    background-color: #ff3d03;
+    border-radius: 10px 0 10px 0;
+    box-shadow: 1px 2px 3px #ff5a0d;
+    color: white;
+    border: 1px solid #702e05;
+    cursor: pointer;
+    user-select: none;
+}
+
+.BurgerControl .LessButton:disabled {
+    background-color: #b0aaa9;
+    cursor: not-allowed;
+    box-shadow: transparent 0 0;
+    opacity: 0.5;
+}
+
+.BurgerControl .LessButton:disabled:hover {
+    background-color: #b0aaa9;
+    box-shadow: transparent 0 0;
+    color: white;
+}
+
+.BurgerControl .MoreButton {
+    margin-left: 10px;
+    padding: 16px;
+    background-color: #702e05;
+    border-radius: 0px 10px 0px 10px;
+    box-shadow: 1px 2px 3px #ff5a0d;
+    color: #ffa529;
+    border: 1px solid #702e05;
+    cursor: pointer;
+    user-select: none;
+}
+
+.BurgerControl button:hover {
+    color: black;
+    background-color: transparent;
+    box-shadow: #ffaca3 1px 1px 15px ;
+}
+
+.BurgerControl button:active {
+    background-color: #DAA972;
+    color: white;
+}
