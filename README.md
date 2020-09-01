@@ -2865,3 +2865,434 @@ const burgerControl = (props) => (
 );
 ```
 ![AddinRemoving](readmeAssets/AddingRemoving.png)
+
+### 7.12 - Displaying Price
+*BurgerControl.js:
+```typescript jsx
+const burgerControls = (props) => (
+    <div className={classes.BurgerControls}>
+        <p>Burger Price: <strong>{props.price.toFixed(2)}</strong></p>
+        {controls.map(control => <BurgerControl key={control.label}
+                                                label={control.label}
+                                                ingredientAdded={props.ingredientAdded.bind(this, control.type)}
+                                                ingredientRemoved={props.ingredientRemoved.bind(this, control.type)}
+                                                disableActions={props.disableActions[control.type]}
+        />)}
+    </div>
+);
+```
+*BurgerBuilder.js*:
+```typescript jsx
+render() {
+    return (
+        <Aux>
+            <Burger ingredients={this.state.ingredients}/>
+            <BurgerControls disableActions={this.state.ingredients}
+                            ingredientAdded={this.addIngredientHandler}
+                            ingredientRemoved={this.removeIngredient}
+                            price={this.state.totalPrice}
+            />
+        </Aux>
+    );
+}
+```
+### 7.13 - Adding Order Button
+*BurgerBuilder.js*:
+```typescript jsx
+class BurgerBuilder extends Component {
+    state = {
+        ingredients: {
+            salad: 0,
+            bacon: 0,
+            cheese: 0,
+            meat: 0
+        },
+        totalPrice: 4,
+        purchasable: false
+    };
+
+    updateOrder = (ingredients) => {
+        const sum = Object.keys(ingredients)
+            .map(igKey => ingredients[igKey])
+            .reduce((accumulator, curr) => accumulator + curr, 0);
+        if (sum > 0) {
+            this.setState((prevState, props) => {
+                return {
+                    purchasable: true
+                };
+            });
+        } else {
+            this.setState((prevState, props) => {
+                return {
+                    purchasable: false
+                };
+            });
+        }
+    };
+...
+render() {
+    return (
+        <Aux>
+            <Burger ingredients={this.state.ingredients}/>
+            <BurgerControls disableActions={this.state.ingredients}
+                            ingredientAdded={this.addIngredientHandler}
+                            ingredientRemoved={this.removeIngredient}
+                            price={this.state.totalPrice}
+                            purchasable={this.state.purchasable}
+            />
+        </Aux>
+    );
+}
+```
+*BurgerControls.js*:
+```typescript jsx
+const burgerControls = (props) => (
+    <div className={classes.BurgerControls}>
+        <p>Burger Price: <strong>{props.price.toFixed(2)}</strong></p>
+        {controls.map(control => <BurgerControl key={control.label}
+                                                label={control.label}
+                                                ingredientAdded={props.ingredientAdded.bind(this, control.type)}
+                                                ingredientRemoved={props.ingredientRemoved.bind(this, control.type)}
+                                                disableActions={props.disableActions[control.type]}
+        />)}
+        <button className={classes.OrderButton} disabled={!props.purchasable}>ORDER NOW</button>
+    </div>
+);
+```
+*BurgerControls.css*:
+```css
+.BurgerControls {
+    margin: 0 auto;
+    background-color: #bc581e;
+    width: 50%;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+}
+
+.BurgerControls .OrderButton {
+    padding: 16px;
+    border-radius: 4px;
+    background-color: #eeec2e;
+    border: 1px solid white;
+    box-shadow: 2px 1px 3px #ee3422;
+    cursor: pointer;
+}
+
+.OrderButton:hover {
+    background-color: #35ee30;
+    animation: sc 1s linear infinite;
+}
+
+.OrderButton:active {
+    background-color: white;
+    border: 1px solid transparent;
+}
+
+.OrderButton:disabled {
+    cursor: not-allowed;
+    background-color: #c9c9c9;
+    animation: none;
+}
+
+@keyframes sc {
+    0% {
+        transform: scale(1)
+    }
+    25% {
+        transform: scale(1.1)
+    }
+    50% {
+        transform: scale(1.2)
+    }
+    75% {
+        transform: scale(1.1)
+    }
+    100% {
+        transform: scale(1)
+    }
+}
+```
+
+### 7.14 - Creating the Order Summary Modal
+
+- src --> UI --> Modal --> Modal.js:
+```typescript jsx
+import React from "react";
+import Aux from '../../hoc/Auxilary';
+
+import classes from './Modal.css';
+
+const modal = (props) => {
+    return (
+        <Aux>
+            <div className={classes.Modal}>
+                {props.children}
+            </div>
+            <div className={classes.Mask}></div>
+        </Aux>
+    );
+};
+export default modal;
+```
+- Here ***translate
+- src --> UI --> Modal --> Modal.css:
+```typescript jsx
+.Modal {
+    position: fixed;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 16px;
+    box-shadow: 1px 1px 1px black;
+    top: 30%;
+    left: 15%;
+    width: 70%;
+    box-sizing: border-box;
+    z-index: 10001;
+    transition: all 0.3s ease-out;
+}
+
+.Mask {
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    top: 0;
+    left: 0;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+@media (min-width: 600px) {
+    .Modal {
+        width: 500px;
+        left: calc(50% - 250px);
+    }
+}
+```
+*BurgerBuilder.js*:
+```typescript jsx
+render() {
+    return (
+        <Aux>
+            <Modal>
+                <OrderSummary ingredients={this.state.ingredients}/>
+            </Modal>
+            <Burger ingredients={this.state.ingredients}/>
+            <BurgerControls disableActions={this.state.ingredients}
+                            ingredientAdded={this.addIngredientHandler}
+                            ingredientRemoved={this.removeIngredient}
+                            price={this.state.totalPrice}
+                            purchasable={this.state.purchasable}
+                            onPurchase={this.purchaseHandler}
+            />
+        </Aux>
+    );
+}
+```
+- components --> Burger --> OrderSummary --> OrderSummary.js:
+```typescript jsx
+import React from "react";
+import Aux from '../../../hoc/Auxilary';
+
+const orderSummary = (props) => {
+    const summary = Object.keys(props.ingredients).map(ingKey => {
+        return (
+            <li key={ingKey}><span style={{textTransform: 'capitalize'}}>{ingKey}</span>: {props.ingredients[ingKey]}</li>
+        );
+    });
+
+    return (
+        <Aux>
+            <h3>Your Order</h3>
+            <p>Ingredients:</p>
+            <ul>
+                {summary}
+            </ul>
+        </Aux>
+    )
+};
+
+export default orderSummary;
+```
+and we get
+![OrderSummaryModal](readmeAssets/orderSummaryModal.png)
+
+### 7.15 - Showing & Hiding the Modal
+*BurgerBuilder.js*:
+We added *purchasing*.
+```typescript jsx
+    state = {
+        ingredients: {
+            salad: 0,
+            bacon: 0,
+            cheese: 0,
+            meat: 0
+        },
+        totalPrice: 4,
+        purchasable: false,
+        purchasing: false
+    };
+...
+
+render() {
+    return (
+        <Aux>
+            <Modal show={this.state.purchasing}>
+                <OrderSummary ingredients={this.state.ingredients}/>
+            </Modal>
+...
+```
+
+*Modal.js*:
+```typescript jsx
+import React from "react";
+import Aux from '../../hoc/Auxilary';
+
+import classes from './Modal.css';
+
+const modal = (props) => {
+    const showStyle = {
+        'transform': props.show ? 'translateY(0)' : 'translateY(-100vh)',
+        'opacity': props.show ? '1' : '0'
+    };
+    return (
+        <Aux>
+            <div style={showStyle} className={classes.Modal}>
+                {props.children}
+            </div>
+            <div style={showStyle} className={classes.Mask}></div>
+        </Aux>
+    );
+};
+
+export default modal;
+```
+Now how to click any place of the page to close modal.
+
+### 7.16 - Backdrop
+*Modal.js*:
+```typescript jsx
+
+    return (
+        <Aux>
+            <div style={showStyle} className={classes.Modal}>
+                {props.children}
+            </div>
+            <div style={showStyle} className={classes.Mask} onClick={props.clicked}></div>
+        </Aux>
+    );
+};
+```
+```typescript jsx
+<div style={showStyle} className={classes.Mask} onClick={props.clicked}></div>
+```
+onClick is listening close event and handled by:
+*BurgerBuilder.js*:
+```typescript jsx
+purchaseCancelHandler = () => {
+    this.setState((prevState, props) => {
+        return {
+            purchasing: false
+        };
+    });
+};
+...
+render() {
+    return (
+        <Aux>
+            <Modal show={this.state.purchasing} clicked={this.purchaseCancelHandler}>
+                <OrderSummary ingredients={this.state.ingredients}/>
+            </Modal>
+...
+``` 
+
+### 7.17 - Adding a Custom Button Component
+- src --> UI --> Button --> Button.js:
+```typescript jsx
+import React from "react";
+
+import classes from './Button.css';
+
+const button = (props) => {
+    return (
+        <button onClick={props.clicked}
+                className={[classes.Button, classes[props.btnType]].join(' ')}>{props.children}</button>
+    );
+};
+
+export default button;
+```
+- src --> UI --> Button --> Button.css:
+```css
+.Button {
+    background-color: transparent;
+    border: none;
+    color: white;
+    outline: none;
+    cursor: pointer;
+    font: inherit;
+    padding: 10px;
+    margin: 10px;
+    font-weight: bold;
+}
+
+.Button:first-of-type {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.Success {
+    color: #5C9210;
+}
+
+.Danger {
+    color: #944317;
+}
+```
+*OrderSummary.js*:
+```typescript jsx
+return (
+    <Aux>
+        <h3>Your Order</h3>
+        <p>Ingredients:</p>
+        <ul>
+            {summary}
+        </ul>
+        <p>Continue to checkout ?</p>
+        <Button btnType='Success'>Continue</Button>
+        <Button btnType='Danger'>Cancel</Button>
+    </Aux>
+)
+```
+### 7.18 - Adding the Price to the Order Summary
+*BurgerBuilder.js*:
+```typescript jsx
+    purchasedHandler = () => {
+        alert('Purchased');
+    };
+...
+render() {
+        return (
+            <Aux>
+                <Modal show={this.state.purchasing} clicked={this.purchaseCancelHandler}>
+                    <OrderSummary canceled={this.purchaseCancelHandler} purchased={this.purchasedHandler} totalPrice={this.state.totalPrice} ingredients={this.state.ingredients}/>
+                </Modal>
+```
+*OrderSummary.js*:
+```typescript jsx
+return (
+    <Aux>
+        <h3>Your Order</h3>
+        <p>Ingredients:</p>
+        <ul>
+            {summary}
+        </ul>
+        <p><strong>Total Price: {props.totalPrice.toFixed(2)}</strong></p>
+        <p>Continue to checkout ?</p>
+        <Button clicked={props.purchased} btnType='Success'>Continue</Button>
+        <Button clicked={props.canceled} btnType='Danger'>Cancel</Button>
+    </Aux>
+)
+```
+
+![PurchasedBurger](readmeAssets/purchasedBurger.png)
