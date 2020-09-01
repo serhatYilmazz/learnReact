@@ -3167,6 +3167,10 @@ const modal = (props) => {
 
 export default modal;
 ```
+- 100vh means viewport-height: If we have 1600 x 900 screen resolution:
+
+- 2vh = (2 * 900) / 100 = 18px 
+
 Now how to click any place of the page to close modal.
 
 ### 7.16 - Backdrop
