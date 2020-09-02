@@ -3300,3 +3300,376 @@ return (
 ```
 
 ![PurchasedBurger](readmeAssets/purchasedBurger.png)
+
+### 7.18 - Adding a Toolbar
+- components --> Navigation --> Toolbar --> Toolbar.js:
+```typescript jsx
+import React from "react";
+import classes from './Toolbar.css';
+
+const toolbar = (props) => (
+    <header className={classes.Toolbar}>
+        <div>MENU</div>
+        <div>LOGO</div>
+        <nav>...</nav>
+    </header>
+);
+
+export default toolbar;
+```
+- components --> Navigation --> Toolbar --> Toolbar.css:
+```css
+.Toolbar {
+    height: 56px;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #703B09;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    z-index: 9000;
+    color: white;
+}
+
+.Toolbar nav {
+    height: 100%;
+}
+```
+*Layout.js*:
+```typescript jsx
+const layout = (props) => (
+    <Aux>
+        <Toolbar />
+        <main className={layoutCss.Content}>
+            {props.children}
+        </main>
+    </Aux>
+);
+```
+
+### 7.19 - Using a Logo in our Application
+- components --> Logo -> Logo.js:
+```typescript jsx
+import React from 'react';
+import Logo from '../../assets/images/burger-logo.png';
+
+import classes from './Logo.css';
+
+const logo = (props) => (
+    <div className={classes.Logo}>
+        <img src={Logo} />
+    </div>
+);
+
+export default logo;
+```
+- Actually it is imported from where it is since while in development, it is not a big concern. But after build, *webpack* needs to understand where it can take the images. Therefore it makes sense that usage of imported sources.
+- components --> Logo -> Logo.css:
+```css
+.Logo {
+    height: 100%;
+    padding: 8px;
+    background-color: white;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.Logo img {
+    height: 80%;
+}
+```
+*Toolbar.js*:
+```typescript jsx
+const toolbar = (props) => (
+    <header className={classes.Toolbar}>
+        <div>MENU</div>
+        <Logo />
+        <nav>...</nav>
+    </header>
+);
+```
+![Menu](readmeAssets/menu.png)
+
+### 7.20- Adding Reusable Navigation Items
+- Navigation --> NavigationItems --> NavigationItems.js:
+```typescript jsx
+import React from "react";
+import NavigationItem from './NavigationItem/NavigationItem';
+
+import classes from './NavigationItems.css';
+
+
+const navigationItems = (props) => (
+    <ul className={classes.NavigationItems}>
+        <NavigationItem link="/" active={true}>Burger Builder</NavigationItem>
+        <NavigationItem link="/" >Checkout</NavigationItem>
+    </ul>
+);
+
+export default navigationItems;
+```
+- Navigation --> NavigationItems --> NavigationItems.css:
+```css
+.NavigationItems {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    height: 100% ;
+}
+```
+- Navigation --> NavigationItems --> NavigationItem --> NavigationItem.js:
+```typescript jsx
+import React from "react";
+import classes from './NavigationItem.css';
+
+const navigationItem = (props) => (
+    <li className={classes.NavigationItem}>
+        <a href={props.link}
+           className={props.active ? classes.active : null}>{props.children}</a>
+    </li>
+);
+
+export default navigationItem;
+```
+- Navigation --> NavigationItems --> NavigationItem --> NavigationItem.css:
+```css
+.NavigationItem {
+    margin: 0;
+    box-sizing: border-box;
+    display: flex;
+    height: 100%;
+    align-items: center;
+}
+
+.NavigationItem a {
+    color: white;
+    text-decoration: none;
+    height: 100%;
+    padding: 16px 10px;
+    border-bottom: 4px solid transparent;
+    box-sizing: border-box;
+    display: block;
+}
+
+.NavigationItem a:hover,
+.NavigationItem a:hover,
+.NavigationItem a.active {
+    background-color: #8F5C2C;
+    bottom-border: 4px solid #40A4C8;
+    color: white;
+}
+```
+*Toolbar.js*:
+```typescript jsx
+const toolbar = (props) => (
+    <header className={classes.Toolbar}>
+        <div>MENU</div>
+        <Logo />
+        <nav>
+            <NavigationItems />
+        </nav>
+    </header>
+);
+```
+### 7.21 - Creating a Responsive SideDrawer
+- Navigation --> SideDrawer --> SideDrawer.js:
+```typescript jsx
+import React from "react";
+import Logo from '../../Logo/Logo';
+import NavigationItems from '../NavigationItems/NavigationItems';
+
+import classes from './SideDrawer.css';
+
+const sideDrawer = (props) => {
+
+    return (
+        <div className={classes.SideDrawer}>
+            <Logo />
+            <nav>
+                <NavigationItems />
+            </nav>
+        </div>
+    );
+};
+
+export default sideDrawer;
+```
+- Navigation --> SideDrawer --> SideDrawer.css:
+```css
+.SideDrawer {
+    z-index: 10002;
+    top: 0;
+    left: 0;
+    background-color: white;
+    height: 100%;
+    width: 280px;
+    max-width: 50%;
+    position: fixed;
+    padding: 32px 16px;
+    box-sizing: border-box;
+    transition: transform 0.3s ease-out;
+}
+
+/* If screen is 500px or more, does not seen */
+@media (min-width: 500px) {
+    .SideDrawer {
+        display: none;
+    }
+}
+
+.Open {
+    transform: translateX(0);
+}
+
+.Close {
+    transform: translateX(-100%);
+}
+```
+*Layout.js*:
+```typescript jsx
+const layout = (props) => (
+    <Aux>
+        <Toolbar />
+        <SideDrawer />
+        <main className={layoutCss.Content}>
+            {props.children}
+        </main>
+    </Aux>
+);
+```
+But there is a problem: it looks like 
+![BadSeen](readmeAssets/badSeen.png)
+
+### 7.22 - Working on Responsive Adjustments
+*SideDrawer.js*:
+```typescript jsx
+return (
+    <div className={classes.SideDrawer}>
+        <div className={classes.Logo}>
+            <Logo />
+        </div>
+        <nav>
+            <NavigationItems />
+        </nav>
+    </div>
+);
+```
+*SideDrawer.css*:
+```css
+...
+.Logo {
+    height: 11%;
+}
+```
+*Toolbar.js*:
+```typescript jsx
+const toolbar = (props) => (
+    <header className={classes.Toolbar}>
+        <div>MENU</div>
+        <div className={classes.Logo}>
+            <Logo/>
+        </div>
+        <nav>
+            <NavigationItems/>
+        </nav>
+    </header>
+);
+```
+*Toolbar.css*:
+```css
+...
+.Logo {
+    height: 100%;
+}
+
+@media (max-width: 499px) {
+    .DesktopOnly {
+        display: none;
+    }
+}
+```
+*Toolbar.js*:
+```typescript jsx
+<nav className={classes.DesktopOnly}>
+      <NavigationItems/>
+</nav>
+```
+and for more responsive approach:
+*NavigationItem.css*:
+```css
+.NavigationItem {
+    box-sizing: border-box;
+    display: block;
+    margin: 10px 0;
+    width: 100%;
+}
+
+.NavigationItem a {
+    color: #8F5C2C;
+    text-decoration: none;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+}
+
+.NavigationItem a:hover,
+.NavigationItem a:hover,
+.NavigationItem a.active {
+    color: #40A4C8;
+}
+
+@media (min-width: 500px) {
+    .NavigationItem {
+        margin: 0;
+        display: flex;
+        width: auto;
+        height: 100%;
+        align-items: center;
+    }
+
+    .NavigationItem a {
+        color: white;
+        height: 100%;
+        padding: 16px 10px;
+        border-bottom: 4px solid transparent;
+    }
+
+    .NavigationItem a:hover,
+    .NavigationItem a:hover,
+    .NavigationItem a.active {
+        background-color: #8F5C2C;
+        border-bottom: 4px solid #40A4C8;
+        color: white;
+    }
+}
+```
+*NavigationItems.css*:
+```css
+.NavigationItems {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    height: 100% ;
+}
+
+@media (min-width: 500px) {
+    .NavigationItems {
+        flex-flow: row;
+    }
+
+}
+```
+As a result if screen is bigger than 500px:
+![moreThan500](readmeAssets/more500px.png)
+
+and if smaller than 500px:
+![lessThan500](readmeAssets/less500px.png)
