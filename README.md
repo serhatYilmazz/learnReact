@@ -3674,6 +3674,55 @@ As a result if screen is bigger than 500px:
 and if smaller than 500px:
 ![lessThan500](readmeAssets/less500px.png)
 
+### Backdrop For SideDrawer
+UI --> Backdrop --> Backdrop.js:
+```typescript jsx
+import React from "react";
+
+import classes from './Backdrop.css';
+
+const backdrop = (props) => (
+    props.show ? <div className={classes.Backdrop} onClick={props.clicked} /> : null
+);
+
+export default backdrop;
+```
+and adding this into SideDrawer and Modal:
+
+*SideDrawer.js*:
+```typescript jsx
+import React from "react";
+import Logo from '../../Logo/Logo';
+import NavigationItems from '../NavigationItems/NavigationItems';
+import Backdrop from '../../../UI/Backdrop/Backdrop';
+import Aux from '../../../hoc/Auxilary/Auxilary';
+
+import classes from './SideDrawer.css';
+
+const sideDrawer = (props) => {
+    let sdClasses = [classes.SideDrawer, classes.Close];
+    if (props.show) {
+        sdClasses = [classes.SideDrawer, classes.Open];
+    }
+    return (
+        <Aux>
+            <Backdrop show={props.show} clicked={props.clicked}/>
+            <div className={sdClasses.join(' ')}>
+                <div className={classes.Logo}>
+                    <Logo/>
+                </div>
+                <nav>
+                    <NavigationItems/>
+                </nav>
+                <Backdrop/>
+            </div>
+        </Aux>
+    );
+};
+
+export default sideDrawer;
+```
+
 ### 7.23 - Improving Performance
 If some components' display event depends on some *props*, we can use shouldComponentUpdate.
 
