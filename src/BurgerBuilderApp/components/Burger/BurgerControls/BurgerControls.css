@@ -1,10 +1,12 @@
 .BurgerControls {
     margin: 0 auto;
     background-color: #bc581e;
-    width: 50%;
-    border-radius: 20px;
+    width: 100%;
     padding: 16px;
     text-align: center;
+    align-items: center;
+    display: flex;
+    flex-flow: column;
 }
 
 .BurgerControls .OrderButton {

@@ -3673,3 +3673,46 @@ As a result if screen is bigger than 500px:
 
 and if smaller than 500px:
 ![lessThan500](readmeAssets/less500px.png)
+
+### 7.23 - Improving Performance
+If some components' display event depends on some *props*, we can use shouldComponentUpdate.
+
+```typescript jsx
+import React from "react";
+import Aux from '../../hoc/Auxilary';
+import Backdrop from '../Backdrop/Backdrop';
+
+import classes from './Modal.css';
+
+class Modal extends React.Component {
+
+    shouldComponentUpdate(nextProps, nextState) {
+        return nextProps.show !== this.props.show;
+    }
+
+    componentWillUpdate() {
+        console.log('Will Update Modal');
+    }
+
+    render() {
+        const showStyle = {
+            'transform': this.props.show ? 'translateY(0)' : 'translateY(-100vh)',
+            'opacity': this.props.show ? '1' : '0'
+        };
+        return (
+            <Aux>
+                <div style={showStyle} className={classes.Modal}>
+                    {this.props.children}
+                </div>
+                <Backdrop clicked={this.props.clicked} show={this.props.show}/>
+            </Aux>
+        );
+    }
+}
+
+export default Modal;
+```
+Thus Modal component is rendered only if ***show*** props is not identical with previous props ***show***. 
+
+### 7.24 - Improving Performance
+*Layout.js* is now an HOC. So *Layout.js* to *hoc*.

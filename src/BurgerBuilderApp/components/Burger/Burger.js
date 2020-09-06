@@ -13,7 +13,7 @@ const burger = (props) => {
 
     const numberOfIngredients = ingredients.reduce((acc, curr) => acc.concat(curr), []);
     if (numberOfIngredients.length === 0) {
-           ingredients.push(<p style={{color: 'white'}} key={'uq'}>Please start adding ingredients.</p>)
+           ingredients.push(<p key={'uq'}>Please start adding ingredients.</p>)
     }
 
     return (<div className={classes.Burger}>
