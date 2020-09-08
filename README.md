@@ -3821,6 +3821,17 @@ class Blog extends React.Component {
 
 export default Blog;
 ```
+- *componentDidMount* is good place to reach data from another place.
+- We transformed data by doing:
+```typescript jsx
+const slicedData = response.data.slice(0, 4);
+const updatedData = slicedData.map(data => {
+    return {
+        ...data,
+        author: 'Serhat'
+    };
+});
+```
 ---
 *Posts.css*:
 ```css
