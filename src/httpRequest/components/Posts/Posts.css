@@ -1,0 +1,7 @@
+.Posts {
+    display: flex;
+    justify-content: space-around;
+    width: 50%;
+    margin: 10px auto;
+    flex-wrap: wrap;
+}

@@ -1,0 +1,50 @@
+.NewPost {
+    width: 80%;
+    box-shadow: #c9c9c9 2px 2px 9px;
+    padding: 30px;
+    margin: 30px auto;
+    box-sizing: border-box;
+    /*display: flex;*/
+    /*align-items: center;*/
+    /*flex-flow: column;*/
+    text-align: center;
+}
+
+.NewPost label {
+    font-weight: bold;
+    display: block;
+    margin: 10px auto;
+}
+
+.NewPost input,
+.NewPost textarea,
+.NewPost select {
+    border-radius: 2px;
+    border: 1px solid #c9c9c9;
+    width: 100%;
+    display: block;
+    font: inherit;
+    outline: none;
+}
+
+.NewPost button {
+    margin: 5px 0;
+    padding: 10px;
+    font: inherit;
+    border: 1px solid #fa923f;
+    background-color: transparent;
+    color: #fa923f;
+    cursor: pointer;
+}
+
+.NewPost button:hover,
+.NewPost button:active {
+    color: white;
+    background-color: #fa923f;
+}
+
+.NewPost select:focus,
+.NewPost input:focus,
+.NewPost textarea:focus {
+    border: 1px solid black;
+}

@@ -3765,3 +3765,301 @@ Thus Modal component is rendered only if ***show*** props is not identical with 
 
 ### 7.24 - Improving Performance
 *Layout.js* is now an HOC. So *Layout.js* to *hoc*.
+
+## 8 - Reaching out to the Web
+
+We used *axios* as a third party for XMLHttpRequest. We create an application that can add, update, delete some specifications while using fake Rest server *jsonplaceholder.typicode.com*
+![XMLHttp](readmeAssets/XMLHttp.png)
+*Blog.js*:
+```typescript jsx
+import React from "react";
+import axios from 'axios';
+
+import Aux from '../../hoc/Auxilary/Auxilary';
+import Posts from '../../components/Posts/Posts';
+import FullPost from '../../components/FullPost/FullPost';
+import NewPost from '../../components/NewPost/NewPost';
+
+class Blog extends React.Component {
+    state = {
+        posts: [],
+        selectedPostId: null
+    };
+
+    componentDidMount() {
+        axios.get("https://jsonplaceholder.typicode.com/posts")
+            .then(response => {
+                const slicedData = response.data.slice(0, 4);
+                const updatedData = slicedData.map(data => {
+                    return {
+                        ...data,
+                        author: 'Serhat'
+                    };
+                });
+                this.setState({
+                    posts: updatedData
+                })
+            });
+    }
+
+    postClickHandler = (id) => {
+        this.setState({
+            selectedPostId: id
+        })
+    };
+
+    render() {
+        return (
+            <Aux>
+                <Posts posts={this.state.posts} clicked={this.postClickHandler} />
+                <FullPost postId={this.state.selectedPostId} />
+                <NewPost />
+            </Aux>
+        );
+    }
+}
+
+export default Blog;
+```
+---
+*Posts.css*:
+```css
+.Posts {
+    display: flex;
+    justify-content: space-around;
+    width: 50%;
+    margin: 10px auto;
+    flex-wrap: wrap;
+}
+```
+*Posts.js*:
+```typescript jsx
+import React from "react";
+import Post from '../../components/Posts/Post/Post';
+
+import classes from './Posts.css';
+
+const posts = (props) => {
+    const posts = props.posts.map(post => {
+        return (
+            <Post key={post.id} title={post.title} body={post.body} author={post.author} clicked={props.clicked.bind(this, post.id)}/>
+        );
+    });
+
+    return (
+        <div className={classes.Posts}>
+            {posts}
+        </div>
+    );
+};
+
+export default posts;
+```
+---
+*Post.css*:
+```css
+.Post {
+    box-shadow: #c9c9c9 2px 2px 9px;
+    padding: 30px;
+    box-sizing: border-box;
+    cursor: pointer;
+    width: 45%;
+    margin: 10px 10px;
+}
+
+.Post p {
+    color: #c9c9c9;
+}
+
+.Post:hover h2 {
+    text-decoration: underline;
+}
+
+.Post:hover {
+    background-color: #b0aaa9;
+}
+```
+*Post.js*:
+```typescript jsx
+import React from "react";
+import classes from './Post.css';
+
+const post = (props) => {
+    return (
+        <div className={classes.Post} onClick={props.clicked}>
+            <h2>{props.title}</h2>
+            {/*<p>{props.body}</p>*/}
+            <p>{props.author}</p>
+        </div>
+    );
+};
+
+export default post;
+```
+---
+*NewPost.css*:
+```css
+.NewPost {
+    width: 80%;
+    box-shadow: #c9c9c9 2px 2px 9px;
+    padding: 30px;
+    margin: 30px auto;
+    box-sizing: border-box;
+    /*display: flex;*/
+    /*align-items: center;*/
+    /*flex-flow: column;*/
+    text-align: center;
+}
+
+.NewPost label {
+    font-weight: bold;
+    display: block;
+    margin: 10px auto;
+}
+
+.NewPost input,
+.NewPost textarea,
+.NewPost select {
+    border-radius: 2px;
+    border: 1px solid #c9c9c9;
+    width: 100%;
+    display: block;
+    font: inherit;
+    outline: none;
+}
+
+.NewPost button {
+    margin: 5px 0;
+    padding: 10px;
+    font: inherit;
+    border: 1px solid #fa923f;
+    background-color: transparent;
+    color: #fa923f;
+    cursor: pointer;
+}
+
+.NewPost button:hover,
+.NewPost button:active {
+    color: white;
+    background-color: #fa923f;
+}
+
+.NewPost select:focus,
+.NewPost input:focus,
+.NewPost textarea:focus {
+    border: 1px solid black;
+}
+```
+*NewPost.js*:
+```typescript jsx
+import React from "react";
+import classes from './NewPost.css';
+
+const newPost = (props) => {
+    return (
+        <div className={classes.NewPost}>
+            <form>
+                <div>
+                    <label>Title</label>
+                    <input/>
+                </div>
+
+                <div>
+                    <label>Content</label>
+                    <textarea />
+                </div>
+
+                <div>
+                    <label>Author</label>
+                    <select>
+                        <option>Serhat</option>
+                    </select>
+                </div>
+                <button>Add</button>
+            </form>
+        </div>
+    );
+};
+
+export default newPost;
+```
+---
+*FullPost.css*:
+```css
+.FullPost {
+    margin: 20px auto;
+    width: 75%;
+    box-sizing: border-box;
+    padding: 30px;
+    box-shadow: #c9c9c9 2px 2px 9px;
+    text-align: center;
+}
+
+.FullPost button {
+    border-radius: 4px;
+    background-color: white;
+    padding: 10px 16px;
+    border: 1px solid #b42734;
+    width: 100%;
+    cursor: pointer;
+    color: #b42734;
+}
+
+.FullPost button:hover {
+    background-color: #b42734;
+    color: white;
+}
+
+.FullPost button:active {
+    opacity: 0.6;
+}
+```
+*FullPost.js*:
+```typescript jsx
+import React from "react";
+import classes from './FullPost.css';
+
+import axios from 'axios';
+
+class FullPost extends React.Component {
+    state = {
+        loadedPost: null
+    };
+
+    componentDidUpdate(nextProps, nextState) {
+        if (this.props.postId) {
+            if (!this.state.loadedPost || (this.state.loadedPost) && this.state.loadedPost.id !== this.props.postId) {
+                axios.get("https://jsonplaceholder.typicode.com/posts/" + this.props.postId)
+                    .then(response => {
+                        this.setState({
+                            loadedPost: response.data
+                        });
+                    });
+            }
+        }
+    }
+
+    render() {
+        let post = <p style={{textAlign: 'center'}}>Please Select a post</p>;
+        if (this.state.loadedPost) {
+            post = <div className={classes.FullPost}>
+                {/*<h1>{props.title}</h1>*/}
+                <h1>{this.state.loadedPost.title}</h1>
+                <p>{this.state.loadedPost.body}</p>
+                <p>{this.state.loadedPost.author}</p>
+                <button>Delete</button>
+            </div>;
+        }
+        return post;
+    }
+}
+
+export default FullPost;
+```
+- We use *componentDidUpdate* to detect changes by triggering event from *Blog.js* by clicking on a div within *Post* component.
+- Infinite loop occurs when updating state in *componentDidUpdate*. Because when we call *setState* in *componentDidUpdate*, *componentDidUpdate* is called again and it occurs an infinite loop.  
+- Therefore we use a logic that if any post id to display and if any loaded post does not exist or exist one but the id of it is not equal previous displayed. Thus it prevents component enters infinite loop.
+```typescript jsx
+if (this.props.postId) {
+            if (!this.state.loadedPost || (this.state.loadedPost) && this.state.loadedPost.id !== this.props.postId) {
+```
