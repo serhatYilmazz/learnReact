@@ -3768,6 +3768,7 @@ Thus Modal component is rendered only if ***show*** props is not identical with 
 
 ## 8 - Reaching out to the Web
 
+### 8.1 - HTTP Requests with Axios
 We used *axios* as a third party for XMLHttpRequest. We create an application that can add, update, delete some specifications while using fake Rest server *jsonplaceholder.typicode.com*
 ![XMLHttp](readmeAssets/XMLHttp.png)
 *Blog.js*:
@@ -4074,3 +4075,177 @@ export default FullPost;
 if (this.props.postId) {
             if (!this.state.loadedPost || (this.state.loadedPost) && this.state.loadedPost.id !== this.props.postId) {
 ```
+
+### 8.2 - POST & useState Hook
+- ***useState*** came up with React 16. It allows us to use state and set state inside functional components. 
+```typescript jsx
+import React, {useState} from "react";
+import classes from './NewPost.css';
+import axios from 'axios';
+
+const NewPost = (props) => {
+    const [post, setPost] = useState({
+        title: '',
+        body: '',
+        author: ''
+    });
+``` 
+- We need to change name to apply convention of functional components.
+- Just import *useState* from React and ***array destructuring***, it gives us a state and its setter implicitly.
+- We can call *useState* multiple times. React.Component knows the order of *useState* calls to initialize state of the component.  
+```typescript jsx
+return (
+    <div className={classes.NewPost}>
+        <form>
+            <div>
+                <label>Title</label>
+                <input type="text" value={post.title}
+                       onChange={event => setPost({...post, title: event.target.value})}/>
+            </div>
+
+            <div>
+                <label>Content</label>
+                <textarea rows="4" value={post.body}
+                          onChange={event => setPost({...post, body: event.target.value})}/>
+            </div>
+            s
+
+            <div>
+                <label>Author</label>
+                <select value={post.author} onChange={event => setPost({...post, author: event.target.value})}>
+                    <option value="Serhat">Serhat</option>
+                    <option value="Manu">Manu</option>
+                </select>
+            </div>
+            <button type="button" onClick={onClickHandler}>Add</button>
+        </form>
+    </div>
+);
+```
+- If we don't do it with immutable data assignment, we lost previous object's values. Therefore first we need to copy previous state's properties, after we overwrite new property.
+```typescript jsx
+<input type="text" value={post.title}
+                       onChange={event => setPost({...post, title: event.target.value})}/>
+```
+```typescript jsx
+const onClickHandler = () => {
+    const data = {
+        title: post.title,
+        body: post.body,
+        author: post.author
+    };
+    axios.post("https://jsonplaceholder.typicode.com/posts", data).then(r => console.log(r));
+};
+```
+- We use direct name of function since we can't use ***this*** keyword in a standalone function.
+
+### 8.3 - Adding Interceptors to Execute Code Globally
+To intercepts all request and response of application we can insert a ***axios*** interceptors. We actually use it by authorization handling. We also use it by handling errors, like no internet connection.
+
+*App.js*:
+```typescript jsx
+axios.interceptors.request.use((req) => {
+    return req;
+}, error => {
+    return Promise.reject(error);
+});
+
+axios.interceptors.response.use((req) => {
+    console.log(req);
+    return req;
+}, error => {
+    console.log(error);
+    return Promise.reject(error);
+});
+
+
+const app = (props) => (
+    <Blog />
+);
+
+export default app;
+```
+### 8.4 - Setting a Default Global Configuration for Axios
+*App.js*:
+```typescript jsx
+axios.defaults.baseURL = "https://jsonplaceholder.typicode.com";
+axios.defaults.headers.common['Authorization'] = 'AUTH TOKEN';
+axios.defaults.headers.post['Content-Type'] = 'application/json';
+```
+with this:
+![defaults](readmeAssets/defaults.png)
+
+### 8.5 - Creating and Using Axios Instances & useEffect Hook
+- ***useEffect*** is a hook that can be used instead of *componentDidMount*, *componentDidUpdate*, *componentWillUnmount*. It is for functional components.
+*FullPost.js*:
+```typescript jsx
+import React, {useState, useEffect} from "react";
+import classes from './FullPost.css';
+
+import axios from '../../axios';
+
+const FullPost = (props) => {
+    const [loadedPost, setLoadedPost] = useState(null);
+
+    useEffect(() => {
+        if (props.postId) {
+            if (!loadedPost || (loadedPost) && loadedPost.id !== props.postId) {
+                axios.get("/posts/" + props.postId)
+                    .then(response => {
+                        setLoadedPost(response.data);
+                    });
+            }
+        }
+    });
+
+    let post = <p style={{textAlign: 'center'}}>Please Select a post</p>;
+    if (loadedPost) {
+        post = <div className={classes.FullPost}>
+            <h1>{loadedPost.title}</h1>
+            <p>{loadedPost.body}</p>
+            <p>{loadedPost.author}</p>
+            <button>Delete</button>
+        </div>;
+    }
+    return post;
+
+};
+
+export default FullPost;
+```
+- We can create our own axios instance for a specific server.
+*axios.js*:
+```typescript jsx
+import axios from 'axios';
+
+const instance = axios.create({
+    baseURL: "https://jsonplaceholder.typicode.com"
+});
+
+instance.defaults.headers.common['Authorization'] = 'AUTH TOKEN';
+instance.defaults.headers.post['Content-Type'] = 'application/json';
+
+instance.interceptors.request.use((req) => {
+    console.log(req);
+    return req;
+}, error => {
+    return Promise.reject(error);
+});
+
+instance.interceptors.response.use((req) => {
+    console.log(req);
+    return req;
+}, error => {
+    console.log(error);
+    return Promise.reject(error);
+});
+export default instance;
+```
+- We can import and use it and its features specifically.
+- The URL which belongs to server can be automatically assigned by setting ***baseURL***. It facilitates and focus on developing requests only. Like:
+```typescript jsx
+axios.get("/posts/" + props.postId)
+    .then(response => {
+        setLoadedPost(response.data);
+    });
+``` 

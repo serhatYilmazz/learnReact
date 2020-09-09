@@ -1,39 +1,34 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import classes from './FullPost.css';
 
-import axios from 'axios';
+import axios from '../../axios';
 
-class FullPost extends React.Component {
-    state = {
-        loadedPost: null
-    };
+const FullPost = (props) => {
+    const [loadedPost, setLoadedPost] = useState(null);
 
-    componentDidUpdate(nextProps, nextState) {
-        if (this.props.postId) {
-            if (!this.state.loadedPost || (this.state.loadedPost) && this.state.loadedPost.id !== this.props.postId) {
-                axios.get("https://jsonplaceholder.typicode.com/posts/" + this.props.postId)
+    useEffect(() => {
+        if (props.postId) {
+            if (!loadedPost || (loadedPost) && loadedPost.id !== props.postId) {
+                axios.get("/posts/" + props.postId)
                     .then(response => {
-                        this.setState({
-                            loadedPost: response.data
-                        });
+                        setLoadedPost(response.data);
                     });
             }
         }
-    }
+    });
 
-    render() {
-        let post = <p style={{textAlign: 'center'}}>Please Select a post</p>;
-        if (this.state.loadedPost) {
-            post = <div className={classes.FullPost}>
-                {/*<h1>{props.title}</h1>*/}
-                <h1>{this.state.loadedPost.title}</h1>
-                <p>{this.state.loadedPost.body}</p>
-                <p>{this.state.loadedPost.author}</p>
-                <button>Delete</button>
-            </div>;
-        }
-        return post;
+    let post = <p style={{textAlign: 'center'}}>Please Select a post</p>;
+    if (loadedPost) {
+        post = <div className={classes.FullPost}>
+            {/*<h1>{props.title}</h1>*/}
+            <h1>{loadedPost.title}</h1>
+            <p>{loadedPost.body}</p>
+            <p>{loadedPost.author}</p>
+            <button>Delete</button>
+        </div>;
     }
-}
+    return post;
+
+};
 
 export default FullPost;
