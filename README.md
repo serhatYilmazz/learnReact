@@ -4249,3 +4249,178 @@ axios.get("/posts/" + props.postId)
         setLoadedPost(response.data);
     });
 ``` 
+### 8.6 - Global Error Handler & Spinner For Post Request
+- hoc --> withErrorHandler --> withErrorHandler.js:
+```typescript jsx
+import React from "react";
+
+import Modal from "../../UI/Modal/Modal";
+import Aux from '../Auxilary/Auxilary';
+
+const withErrorHandler = (WrappedComponent, axios) => {
+    return class extends React.Component {
+        state = {
+            error: null
+        };
+
+        errorConfirmHandler = () => {
+            this.setState({error: null});
+        };
+
+        componentWillMount() {
+            this.resInterceptor = axios.interceptors.response.use(null, err => {
+                this.setState({error: err})
+            });
+        }
+
+        componentWillUnmount() {
+            axios.interceptors.response.eject(this.resInterceptor);
+        }
+
+        render() {
+            return (
+                <Aux>
+                    <Modal show={this.state.error}
+                           clicked={this.errorConfirmHandler}>
+                        {this.state.error ? this.state.error.message : null}
+                    </Modal>
+                    <WrappedComponent {...this.props} />
+                </Aux>
+            );
+        }
+    }
+};
+
+export default withErrorHandler;
+```
+- *componentWillUnmount* is used for eject duplication of components interceptors.
+
+*BurgerBuilder.js*:
+```typescript jsx
+...
+export default withErrorHandler(BurgerBuilder, axiosOrder);
+```
+---
+For Spinner, 
+
+*BurgerBuilder.js*:
+```typescript jsx
+state = {
+    ...
+    loading: false
+};
+...
+purchasedHandler = () => {
+this.setState({loading: true});
+const order = {
+    ingredients: this.state.ingredients,
+    deliveryMethod: 'FASTEST'
+};
+axiosOrder.post("/orders/", order)
+    .then(response => {
+        this.setState({loading: false, purchasing: false});
+    })
+    .catch(err => {
+        this.setState({loading: false, purchasing: false});
+    });
+};
+...
+render() {
+    ...
+    if (this.state.loading) {
+        orderSummary = <Spinner />
+    }
+    return (
+        <Aux>
+            <Authentication/>
+            <Modal show={this.state.purchasing} clicked={this.purchaseCancelHandler}>
+                {orderSummary}
+            </Modal>
+    ...
+}
+```
+UI --> Spinner.js:
+```typescript jsx
+import React from "react";
+
+import classes from './Spinner.css';
+
+const Spinner = (props) => (
+    <div className={classes.Loader}>
+
+    </div>
+);
+
+export default Spinner;
+```
+UI --> Spinner.css:
+```css
+.Loader {
+    margin: 100px auto;
+    font-size: 25px;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    position: relative;
+    text-indent: -9999em;
+    -webkit-animation: load5 1.1s infinite ease;
+    animation: load5 1.1s infinite ease;
+    -webkit-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+}
+@-webkit-keyframes load5 {
+    0%,
+    100% {
+        box-shadow: 0em -2.6em 0em 0em #b311ee, 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.5), -1.8em -1.8em 0 0em rgba(179,17,238, 0.7);
+    }
+    12.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.7), 1.8em -1.8em 0 0em #b311ee, 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.5);
+    }
+    25% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.5), 1.8em -1.8em 0 0em rgba(179,17,238, 0.7), 2.5em 0em 0 0em #b311ee, 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    37.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.5), 2.5em 0em 0 0em rgba(179,17,238, 0.7), 1.75em 1.75em 0 0em #b311ee, 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    50% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.5), 1.75em 1.75em 0 0em rgba(179,17,238, 0.7), 0em 2.5em 0 0em #b311ee, -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    62.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.5), 0em 2.5em 0 0em rgba(179,17,238, 0.7), -1.8em 1.8em 0 0em #b311ee, -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    75% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.5), -1.8em 1.8em 0 0em rgba(179,17,238, 0.7), -2.6em 0em 0 0em #b311ee, -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    87.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.5), -2.6em 0em 0 0em rgba(179,17,238, 0.7), -1.8em -1.8em 0 0em #b311ee;
+    }
+}
+@keyframes load5 {
+    0%,
+    100% {
+        box-shadow: 0em -2.6em 0em 0em #b311ee, 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.5), -1.8em -1.8em 0 0em rgba(179,17,238, 0.7);
+    }
+    12.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.7), 1.8em -1.8em 0 0em #b311ee, 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.5);
+    }
+    25% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.5), 1.8em -1.8em 0 0em rgba(179,17,238, 0.7), 2.5em 0em 0 0em #b311ee, 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    37.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.5), 2.5em 0em 0 0em rgba(179,17,238, 0.7), 1.75em 1.75em 0 0em #b311ee, 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    50% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.5), 1.75em 1.75em 0 0em rgba(179,17,238, 0.7), 0em 2.5em 0 0em #b311ee, -1.8em 1.8em 0 0em rgba(179,17,238, 0.2), -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    62.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.5), 0em 2.5em 0 0em rgba(179,17,238, 0.7), -1.8em 1.8em 0 0em #b311ee, -2.6em 0em 0 0em rgba(179,17,238, 0.2), -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    75% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.5), -1.8em 1.8em 0 0em rgba(179,17,238, 0.7), -2.6em 0em 0 0em #b311ee, -1.8em -1.8em 0 0em rgba(179,17,238, 0.2);
+    }
+    87.5% {
+        box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.5), -2.6em 0em 0 0em rgba(179,17,238, 0.7), -1.8em -1.8em 0 0em #b311ee;
+    }
+}
+```

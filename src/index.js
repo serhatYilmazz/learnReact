@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './httpRequest/App';
-// import App from './BurgerBuilderApp/App';
+// import App from './httpRequest/App';
+import App from './BurgerBuilderApp/App';
 // import App from './PersonApp/containers/App';
 import * as serviceWorker from './serviceWorker';
 

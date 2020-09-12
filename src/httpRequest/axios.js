@@ -8,20 +8,15 @@ instance.defaults.headers.common['Authorization'] = 'AUTH TOKEN';
 instance.defaults.headers.post['Content-Type'] = 'application/json';
 
 instance.interceptors.request.use((req) => {
-    console.log(req)
     return req;
 }, error => {
     return Promise.reject(error);
 });
 
 instance.interceptors.response.use((req) => {
-    console.log(req);
     return req;
 }, error => {
-    console.log(error);
     return Promise.reject(error);
 });
-
-
 
 export default instance;
