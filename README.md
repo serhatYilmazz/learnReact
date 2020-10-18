@@ -4294,6 +4294,7 @@ const withErrorHandler = (WrappedComponent, axios) => {
 export default withErrorHandler;
 ```
 - *componentWillUnmount* is used for eject duplication of components interceptors.
+- If we don't do eject, after we route another page, the interceptor which initialize in the hook stays in memory. After a lot of open close iteration it causes memory leaks.
 
 *BurgerBuilder.js*:
 ```typescript jsx
@@ -4423,4 +4424,475 @@ UI --> Spinner.css:
         box-shadow: 0em -2.6em 0em 0em rgba(179,17,238, 0.2), 1.8em -1.8em 0 0em rgba(179,17,238, 0.2), 2.5em 0em 0 0em rgba(179,17,238, 0.2), 1.75em 1.75em 0 0em rgba(179,17,238, 0.2), 0em 2.5em 0 0em rgba(179,17,238, 0.2), -1.8em 1.8em 0 0em rgba(179,17,238, 0.5), -2.6em 0em 0 0em rgba(179,17,238, 0.7), -1.8em -1.8em 0 0em #b311ee;
     }
 }
+```
+
+## 9 - Routing
+
+### 9.1 - Setting Up Links
+
+*Blog.js*:
+```typescript jsx
+render() {
+    return (
+        <Aux>
+            <header className={classes.Blog}>
+                <nav>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/ne    w-post">New Post</a></li>
+                    </ul>
+                </nav>
+            </header>
+            <Posts posts={this.state.posts} clicked={this.postClickHandler} />
+            <FullPost postId={this.state.selectedPostId} />
+            <NewPost />
+        </Aux>
+    );
+}
+```
+### 9.1 - Setting Up Router Package
+
+```shell script
+npm install --save react-router react-router-dom
+```
+
+*App.js*:
+```typescript jsx
+import React from "react";
+import {BrowserRouter} from "react-router-dom";
+
+import Blog from './containers/Blog/Blog';
+
+const app = (props) => (
+    <BrowserRouter>
+        <Blog />
+    </BrowserRouter>
+);
+export default app;
+```
+- We import ***BrowserRouter*** from *react-router-dom*. After we wrapped the *Blog* component, we can use Router feature inside of the wrapped components.
+- *Posts.js* will be container to hold main posts.
+- By setting ***basename="/my-app"***, BrowserRouter converts all sub Routes URL's prefixed like "/my-app/...". 
+
+*Posts.js*:
+```typescript jsx
+class Posts extends React.Component {
+    state = {
+        posts: []
+    };
+
+    componentDidMount() {
+        axios.get("/posts")
+            .then(response => {
+                const slicedData = response.data.slice(0, 8);
+                const updatedData = slicedData.map(data => {
+                    return {
+                        ...data,
+                        author: 'Serhat'
+                    };
+                });
+                this.setState({
+                    posts: updatedData
+                })
+            });
+    }
+
+    postClickHandler = (id) => {
+        this.setState({
+            selectedPostId: id
+        });
+    };
+
+
+    render() {
+        let posts = this.state.posts.map(post => {
+            return (
+                <Post key={post.id} title={post.title} body={post.body} author={post.author}
+                      clicked={this.postClickHandler.bind(this, post.id)}/>
+            );
+        });
+        return (
+            <div className={classes.Posts}>
+                {posts}
+            </div>
+        );
+    }
+}
+```
+
+*Blog.js*:
+```typescript jsx
+class Blog extends React.Component {
+
+    render() {
+        return (
+            <Aux>
+                <header className={classes.Blog}>
+                    <nav>
+                        <ul>
+                            <li><a href="/">Home</a></li>
+                            <li><a href="/new-post">New Post</a></li>
+                        </ul>
+                    </nav>
+                </header>
+                <Posts />
+            </Aux>
+        );
+    }
+}
+```
+
+- If we don't specify ***exact***:
+    - if *path* is prefix of current path
+- If it exists 
+    - it should match one-to-one.
+
+```typescript jsx
+class Blog extends React.Component {
+
+    render() {
+        return (
+            <Aux>
+                <header className={classes.Blog}>
+                    <nav>
+                        <ul>
+                            <li><a href="/">Home</a></li>
+                            <li><a href="/new-post">New Post</a></li>
+                        </ul>
+                    </nav>
+                </header>
+                <Route path="/posts" exact component={Posts}/>
+                <Route path="/posts" exact render={() => <Posts />}/>
+            </Aux>
+        );
+    }
+}
+```
+
+```typescript jsx
+//1st way
+<Route path="/posts" exact component={Posts}/>
+//2nd way
+<Route path="/posts" exact render={() => <Posts />}/>
+```
+
+### 9.2 - Using Links to Switch Pages
+- To pass across pages without reload the page:
+```typescript jsx
+import {Route, Link} from 'react-router-dom';
+...
+<li><Link to="/posts">Home</Link></li>
+
+//with configuration
+<li><Link to={{
+    pathname: '/new-post',
+    hash: '#submit',
+    search: "?quickSubmit=true"
+}}>New Post</Link></li>
+```
+
+### 9.3 - The withRouter HOC
+- Routing related props are not passed down the component tree. BrowserRouter --> A --> B,
+we can't reach props of router's from B.
+- To reach it, used ***withRouter*** from react-router-dom. 
+```typescript jsx
+export default withRouter(B);
+```
+
+### 9.4 - Absolute vs Relative Paths
+- By default all URLs are acted as absolute path.
+- If we want to build relative path, we can use 
+```typescript jsx
+<Link to={{
+    pathname: this.props.match.url + 'new-post',
+    hash: '#submit',
+    search: "?quickSubmit=true"
+}}>New Post</Link>
+```
+
+### 9.5 - Styling the Active Route
+- To achieve this, we need to use *NavLink* instead of *Link*. There are several props that can be used for styling on activation.
+- *activeClassName*, *activeStyle* provide us generic css rendering when DOM component active.
+
+### 9.6 - Passing Route Parameters
+*Posts.js*:
+```typescript jsx
+render() {
+    let posts = this.state.posts.map(post => {
+        return (
+            <Link to={'/posts/' + post.id} key={post.id} > <Post key={post.id} title={post.title} body={post.body} author={post.author}
+                               clicked={this.postClickHandler.bind(this, post.id)}/>
+            </Link>
+        );
+    });
+    return (
+        <div className={classes.Posts}>
+            {posts}
+        </div>
+    );
+}
+```
+### 9.7 - Extracting Route Parameters
+```typescript jsx
+const FullPost = (props) => {
+    const [loadedPost, setLoadedPost] = useState({
+        title: '',
+        author: '',
+        body: '',
+        id: -1
+    });
+
+    useEffect(() => {
+        if (!loadedPost || (loadedPost) && loadedPost.id !== parseInt(props.match.params.id)) {
+            axios.get("/posts/" + props.match.params.id)
+                .then(response => {
+                    setLoadedPost({
+                        ...response.data,
+                        id: Number(props.match.params.id)
+                    });
+                });
+        }
+    });
+
+    return <div className={classes.FullPost}>
+        <h1>{loadedPost.title}</h1>
+        <p>{loadedPost.body}</p>
+        <p>{loadedPost.author}</p>
+        <button>Delete</button>
+    </div>;
+
+};
+
+export default FullPost;
+```
+- *props.match.params.id* is the way of reaching parameters.
+
+### 9.7 - Using Switch to Load a Single Route
+- Only render only one route at a time, we need to import and use ***Switch***.
+```typescript jsx
+import {NavLink, Route, withRouter, Switch} from 'react-router-dom';
+...
+<Switch>
+    <Route path="/" exact component={Posts}/>
+    <Route path="/new-post" exact component={NewPost}/>
+    <Route path="/posts/:id" exact component={FullPost}/>
+</Switch>
+```
+- When using *Switch*, the order of the *Route*s are important.
+
+### 9.8 - Navigating Programmatically
+*Posts.js*:
+```typescript jsx
+postClickHandler = (id) => {
+    this.props.history.push('/' + id);
+};
+
+render() {
+    let posts = this.state.posts.map(post => {
+        return (
+            <Post key={post.id} title={post.title} body={post.body} author={post.author}
+                  clicked={this.postClickHandler.bind(this, post.id)} />
+
+        );
+    });
+    return (
+        <div className={classes.Posts}>
+            {posts}
+        </div>
+    );
+}
+```
+```typescript jsx
+postClickHandler = (id) => {
+    this.props.history.push('/posts/' + id);
+};
+```
+- To navigate programatically, push can be used.
+
+### 9.9 - Understanding Nested Routes
+- If we want to render FullPost under the Posts component,
+*Blog.js*:
+```typescript jsx
+<Switch>
+    <Route path="/new-post" exact component={NewPost}/>
+    <Route path="/posts" component={Posts}/>
+</Switch>
+```
+- We removed *exact* from "/" path, since to render *Posts*, the URL should be exactly "/". But when we create nested route, "/:id" is not matched with exact "/". Therefore *Posts* is never rendered, so *FullPost* is never rendered.
+- "/" overrides "/new-post". Therefore the order of them should be changed.
+
+*Posts.js*:
+```typescript jsx
+return (
+    <div className={classes.Posts}>
+        {posts}
+        <Route path={this.props.match.url + "/:id"} exact component={FullPost}/>
+    </div>
+);
+```
+So it seems like:
+![nestedRoutes](readmeAssets/nestedRoutes.png)
+
+### 9.10 - Redirecting Requests
+*Blog.js*:
+```typescript jsx
+import {NavLink, Route, withRouter, Switch, Redirect} from 'react-router-dom';
+...
+<Switch>
+    <Route path="/new-post" exact component={NewPost}/>
+    <Route path="/posts" component={Posts}/>
+    <Redirect from="/" to="/posts" />
+</Switch>
+```
+- If we don't use *Redirect* in *Switch*, we can't use *from*.
+
+### 9.10 - Conditional Redirects
+*NewPost.js*:
+```typescript jsx
+const [post, setPost] = useState({
+    title: '',
+    body: '',
+    author: '',
+    submitted: false
+});
+```
+- Added *submitted* properties to prop.
+```typescript jsx
+...
+const onClickHandler = () => {
+    const data = {
+        title: post.title,
+        body: post.body,
+        author: post.author
+    };
+    axios.post("/posts", data).then(r => {
+        console.log(r);
+        setPost({submitted: true});
+    });
+};
+...
+let redirected = null;
+if (post.submitted) {
+    redirected = <Redirect to="/posts"/>
+}
+return (
+        <div className={classes.NewPost}>
+            {redirected}
+...
+```
+### 9.11 - Using the History Prop to Redirect (Replace)
+The other way of redirecting page is using *history*.
+```typescript jsx
+props.history.push("/posts");
+```
+- Pushing redirecting stack the specified URL. When we want to go back, we can.
+```typescript jsx
+props.history.replace("/posts");
+```
+- By replacing, we can't go back. Because the place of the current URL is replaced by this function with the specified URL.
+
+### 9.11 - Working with Guards
+
+- The Guards in React is simple. Conditinal redirects are guards. 
+
+### 9.12 - Handling the 404 Case (Unknown Routes)
+*Blog.js*:
+```typescript jsx
+<Switch>
+    <Route path="/new-post" exact component={NewPost}/>
+    <Route path="/posts" component={Posts}/>
+    {/*<Redirect from="/" to="/posts" />*/}
+    <Route render={() => <h1>Not Found</h1>}/>
+</Switch>
+```
+- Using route without specifying path. But it does not work with:
+```typescript jsx
+{<Redirect from="/" to="/posts" />}
+```
+Because from="/" is matched with prefixed of every slashed("/") URL.
+
+### 9.13 - Loading Routes Lazily
+- For lazily loading components, we will use dynamic import in JS.
+- The standard import syntax is static and will always result in all code in the imported module being evaluated at load time. In situations where you wish to load a module conditionally or on demand, you can use a dynamic import instead. The following are some reasons why you might need to use dynamic import:
+  
+    - When importing statically significantly slows the loading of your code and there is a low likelihood that you will need the code you are importing, or you will not need it until a later time.
+    - When importing statically significantly increases your program's memory usage and there is a low likelihood that you will need the code you are importing.
+    - When the module you are importing does not exist at load time
+    - When the import specifier string needs to be constructed dynamically. (Static import only supports static specifiers.)
+    - When the module being imported has side effects, and you do not want those side effects unless some condition is true. (It is recommended not to have any side effects in a module, but you sometimes cannot control this in your module dependencies.)
+    
+```typescript jsx
+// Standard import:
+import '/modules/my-module.js';
+
+// This works with dynamic imports as well:
+
+(async () => {
+  if (somethingIsTrue) {
+    // import module for side effects
+    await import('/modules/my-module.js');
+  }
+})();
+
+// is Equal to:
+import('/modules/my-module.js')
+  .then((module) => {
+    // Do something with the module.
+  });
+```
+
+- To implement it in the app, we need to create an HOC.
+*AsyncComponent.js*:
+```typescript jsx
+import React from "react";
+
+const asyncComponent = (importComponent) => {
+    return class extends React.Component {
+        state = {
+            component: null
+        };
+
+        componentDidMount() {
+            importComponent()
+                .then(cmp => {
+                    console.log(cmp);
+                    this.setState({component: cmp.default});
+                });
+        }
+
+        render() {
+            let C = this.state.component;
+            return (
+                C ? <C {...this.props}/> : null
+            );
+        }
+    };
+};
+
+export default asyncComponent;
+```
+- ***importComponent*** is a parameter that is passed from ***import(...)***.
+- It is not that important but as a note: 
+    - We can write any JS code if there is not any JSX code inside return in render.
+    ```typescript jsx
+        render() {
+            let C = this.state.component;
+            return (
+                C ? <C {...this.props}/> : null
+            );
+        }
+    ```
+    - But if there is any JSX code available, we need to use it within curly bracers.
+    
+*Blog.js*:
+```typescript jsx
+import asyncComponent from "../../hoc/asynccomponent/AsyncComponent";
+
+const AsyncNewPost = asyncComponent(() => {
+    return import("../../components/NewPost/NewPost");
+});
+...
+ <Switch>
+    <Route path="/new-post" exact component={AsyncNewPost}/>
+...
 ```

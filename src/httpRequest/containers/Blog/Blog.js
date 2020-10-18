@@ -1,48 +1,41 @@
 import React from "react";
-import axios from '../../axios';
-
-import Aux from '../../hoc/Auxilary/Auxilary';
+import {NavLink, Route, Switch, withRouter} from 'react-router-dom';
 import Posts from '../../components/Posts/Posts';
-import FullPost from '../../components/FullPost/FullPost';
-import NewPost from '../../components/NewPost/NewPost';
+
+import classes from './Blog.css';
+import asyncComponent from "../../hoc/asynccomponent/AsyncComponent";
+
+const AsyncNewPost = asyncComponent(() => {
+    return import("../../components/NewPost/NewPost");
+});
 
 class Blog extends React.Component {
-    state = {
-        posts: [],
-        selectedPostId: null
-    };
-
-    componentDidMount() {
-        axios.get("/posts")
-            .then(response => {
-                const slicedData = response.data.slice(0, 4);
-                const updatedData = slicedData.map(data => {
-                    return {
-                        ...data,
-                        author: 'Serhat'
-                    };
-                });
-                this.setState({
-                    posts: updatedData
-                })
-            });
-    }
-
-    postClickHandler = (id) => {
-        this.setState({
-            selectedPostId: id
-        })
-    };
 
     render() {
+        console.log(this.props);
         return (
-            <Aux>
-                <Posts posts={this.state.posts} clicked={this.postClickHandler} />
-                <FullPost postId={this.state.selectedPostId} />
-                <NewPost />
-            </Aux>
+            <div className={classes.Blog}>
+                <header>
+                    <nav>
+                        <ul>
+                            <li><NavLink to="/posts" exact activeClassName={classes.active}>Home</NavLink></li>
+                            <li><NavLink to={{
+                                pathname: this.props.match.url + 'new-post',
+                                hash: '#submit',
+                                search: "?quickSubmit=true"
+                            }}>New Post</NavLink></li>
+                        </ul>
+                    </nav>
+                </header>
+                <Switch>
+                    <Route path="/new-post" exact component={AsyncNewPost}/>
+                    <Route path="/posts" component={Posts}/>
+                    {/*<Redirect from="/" to="/posts" />*/}
+                    <Route render={() => <h1>Not Found</h1>}/>
+                </Switch>
+            </div>
         );
     }
 }
 
-export default Blog;
+export default withRouter(Blog);

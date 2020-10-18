@@ -1,33 +1,34 @@
-import React, {useState, useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import classes from './FullPost.css';
 
 import axios from '../../axios';
 
 const FullPost = (props) => {
-    const [loadedPost, setLoadedPost] = useState(null);
+    const [loadedPost, setLoadedPost] = useState({
+        title: '',
+        author: '',
+        body: '',
+        id: -1
+    });
 
     useEffect(() => {
-        if (props.postId) {
-            if (!loadedPost || (loadedPost) && loadedPost.id !== props.postId) {
-                axios.get("/posts/" + props.postId)
-                    .then(response => {
-                        setLoadedPost(response.data);
+        if (!loadedPost || (loadedPost) && loadedPost.id !== parseInt(props.match.params.id)) {
+            axios.get("/posts/" + props.match.params.id)
+                .then(response => {
+                    setLoadedPost({
+                        ...response.data,
+                        id: Number(props.match.params.id)
                     });
-            }
+                });
         }
     });
 
-    let post = <p style={{textAlign: 'center'}}>Please Select a post</p>;
-    if (loadedPost) {
-        post = <div className={classes.FullPost}>
-            {/*<h1>{props.title}</h1>*/}
-            <h1>{loadedPost.title}</h1>
-            <p>{loadedPost.body}</p>
-            <p>{loadedPost.author}</p>
-            <button>Delete</button>
-        </div>;
-    }
-    return post;
+    return <div className={classes.FullPost}>
+        <h1>{loadedPost.title}</h1>
+        <p>{loadedPost.body}</p>
+        <p>{loadedPost.author}</p>
+        <button>Delete</button>
+    </div>;
 
 };
 
