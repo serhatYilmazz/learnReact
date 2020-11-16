@@ -1,15 +1,15 @@
 import React, {Component} from "react";
-import axiosOrder from '../axios-orders';
+import axiosOrder from '../../axios-orders';
 
-import Aux from '../hoc/Auxilary/Auxilary';
-import Burger from '../components/Burger/Burger';
-import BurgerControls from '../components/Burger/BurgerControls/BurgerControls';
-import Modal from '../UI/Modal/Modal';
-import OrderSummary from '../components/Burger/OrderSummary/OrderSummary';
+import Aux from '../../hoc/Auxilary/Auxilary';
+import Burger from '../../components/Burger/Burger';
+import BurgerControls from '../../components/Burger/BurgerControls/BurgerControls';
+import Modal from '../../UI/Modal/Modal';
+import OrderSummary from '../../components/Burger/OrderSummary/OrderSummary';
 
-import Authentication from "../components/Authentication/Authentication";
-import Spinner from "../UI/Spinner/Spinner";
-import withErrorHandler from "../hoc/withErrorHandler/withErrorHandler";
+import Authentication from "../../components/Authentication/Authentication";
+import Spinner from "../../UI/Spinner/Spinner";
+import withErrorHandler from "../../hoc/withErrorHandler/withErrorHandler";
 
 const INGREDIENT_PRICES = {
     salad: 0.5,
@@ -122,7 +122,6 @@ class BurgerBuilder extends Component {
         }
         return (
             <Aux>
-                <Authentication/>
                 <Modal show={this.state.purchasing} clicked={this.purchaseCancelHandler}>
                     {orderSummary}
                 </Modal>

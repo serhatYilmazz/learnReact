@@ -4678,7 +4678,7 @@ import {NavLink, Route, withRouter, Switch} from 'react-router-dom';
     <Route path="/posts/:id" exact component={FullPost}/>
 </Switch>
 ```
-- When using *Switch*, the order of the *Route*s are important.
+- When using *Switch*, the orders of the *Route*s are important.
 
 ### 9.8 - Navigating Programmatically
 *Posts.js*:
@@ -4895,4 +4895,45 @@ const AsyncNewPost = asyncComponent(() => {
  <Switch>
     <Route path="/new-post" exact component={AsyncNewPost}/>
 ...
+```
+
+## 10 - Adding Routing to Burger Project
+
+### 10.1 - Building Checkout Component
+
+components --> Order --> CheckoutSummary.js
+```typescript jsx
+import React from "react";
+import Burger from "../../Burger/Burger";
+import Button from "../../../UI/Button/Button";
+
+import classes from './CheckoutSummary.css';
+
+const checkoutSummary = (props) => {
+    return (
+        <div className={classes.CheckoutSummary}>
+            <h1>Well Well</h1>
+            <div style={{width: '300px', margin: 'auto'}}>
+                <Burger ingredients={props.ingredients}/>
+            </div>
+            <div>
+                <Button btnType="Success" clicked>Continue</Button>
+                <Button btnType="Danger" clicked>Cancel</Button>
+            </div>
+        </div>
+    );
+};
+
+export default checkoutSummary;
+```
+containers --> Checkout --> Checkout.js
+```typescript jsx
+...
+  render() {
+        return (
+            <div>
+                <CheckoutSummary ingredients={this.state.ingredients}/>
+            </div>
+        );
+    }
 ```
